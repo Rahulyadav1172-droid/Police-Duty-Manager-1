@@ -10,6 +10,7 @@ import PersonnelManagement from "@/pages/personnel";
 import DutyPointsManagement from "@/pages/duty-points";
 import RosterHistory from "@/pages/roster";
 import AssignDuty from "@/pages/assign";
+import HandoverReport from "@/pages/handover";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ function Router() {
         <Route path="/duty-points" component={DutyPointsManagement} />
         <Route path="/roster" component={RosterHistory} />
         <Route path="/assign" component={AssignDuty} />
+        <Route path="/handover" component={HandoverReport} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

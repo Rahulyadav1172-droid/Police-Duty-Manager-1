@@ -1,4 +1,4 @@
-import { ShieldAlert, Users, MapPin, ListOrdered, CalendarCheck, Search } from "lucide-react";
+import { ShieldAlert, Users, MapPin, ListOrdered, CalendarCheck, Search, ArrowLeftRight } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -8,6 +8,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { name: "Live Board", href: "/", icon: ShieldAlert },
     { name: "Assign Duty", href: "/assign", icon: CalendarCheck },
     { name: "Roster History", href: "/roster", icon: ListOrdered },
+    { name: "Handover Report", href: "/handover", icon: ArrowLeftRight },
     { name: "Personnel", href: "/personnel", icon: Users },
     { name: "Duty Points", href: "/duty-points", icon: MapPin },
   ];

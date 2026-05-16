@@ -224,3 +224,303 @@ export function generateShiftReport({ entries, statusFilter = "all", title }: Re
   const filterPart = statusFilter === "all" ? "all" : statusFilter;
   doc.save(`AyodhyaPolice_DutyReport_${filterPart}_${dateStr}.pdf`);
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HANDOVER REPORT
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type HandoverOfficer = {
+  name: string;
+  rank: string;
+  beltNumber?: string;
+  remarks?: string;
+};
+
+export type HandoverOptions = {
+  outgoing: HandoverOfficer;
+  incoming: HandoverOfficer;
+  entries: RosterEntry[];
+  handoverDateTime?: Date;
+  witnessName?: string;
+  witnessRank?: string;
+  location?: string;
+};
+
+export function generateHandoverReport(opts: HandoverOptions): void {
+  const { outgoing, incoming, entries, witnessName, witnessRank, location } = opts;
+  const now = opts.handoverDateTime ?? new Date();
+
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  const NAVY   = [13, 27, 62]   as [number, number, number];
+  const GOLD   = [180, 140, 40] as [number, number, number];
+  const WHITE  = [255, 255, 255] as [number, number, number];
+  const LIGHT  = [240, 244, 255] as [number, number, number];
+  const DARK   = [20, 20, 30]   as [number, number, number];
+  const GRAY   = [100, 100, 110] as [number, number, number];
+  const GREEN  = [22, 101, 52]  as [number, number, number];
+  const RED    = [153, 27, 27]  as [number, number, number];
+  const BLUE   = [29, 78, 216]  as [number, number, number];
+  const AMBER  = [146, 64, 14]  as [number, number, number];
+
+  // ── Top header ────────────────────────────────────────────────────────────
+  doc.setFillColor(...NAVY);
+  doc.rect(0, 0, pageWidth, 36, "F");
+
+  // Gold accent line
+  doc.setFillColor(...GOLD);
+  doc.rect(0, 34, pageWidth, 2, "F");
+
+  // Emblem circle left
+  doc.setFillColor(...WHITE);
+  doc.circle(20, 18, 10, "F");
+  doc.setFontSize(6.5);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...NAVY);
+  doc.text("AYODHYA", 20, 15, { align: "center" });
+  doc.text("POLICE", 20, 19, { align: "center" });
+  doc.text("LINE", 20, 23, { align: "center" });
+
+  // Emblem circle right (mirror)
+  doc.setFillColor(...WHITE);
+  doc.circle(pageWidth - 20, 18, 10, "F");
+  doc.setFontSize(6.5);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...NAVY);
+  doc.text("AYODHYA", pageWidth - 20, 15, { align: "center" });
+  doc.text("POLICE", pageWidth - 20, 19, { align: "center" });
+  doc.text("LINE", pageWidth - 20, 23, { align: "center" });
+
+  // Main title
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...WHITE);
+  doc.text("DUTY HANDOVER CERTIFICATE", pageWidth / 2, 14, { align: "center" });
+  doc.setFontSize(8.5);
+  doc.setFont("helvetica", "normal");
+  doc.text("Ayodhya Police Line — Official Shift Handover Record", pageWidth / 2, 22, { align: "center" });
+  doc.setFontSize(7.5);
+  doc.setTextColor(...GOLD);
+  doc.text(`Date & Time: ${format(now, "dd MMMM yyyy, HH:mm")}${location ? `   |   Location: ${location}` : ""}`, pageWidth / 2, 29, { align: "center" });
+
+  // ── Two-column officer block ───────────────────────────────────────────────
+  const colPad = 10;
+  const colW   = (pageWidth - colPad * 3) / 2;
+  const topY   = 42;
+  const boxH   = 38;
+
+  // Outgoing officer — left box
+  doc.setFillColor(...LIGHT);
+  doc.roundedRect(colPad, topY, colW, boxH, 3, 3, "F");
+  doc.setFillColor(...RED);
+  doc.roundedRect(colPad, topY, colW, 8, 3, 3, "F");
+  doc.rect(colPad, topY + 5, colW, 3, "F");
+
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...WHITE);
+  doc.text("OUTGOING OFFICER  (Handing Over)", colPad + colW / 2, topY + 5.5, { align: "center" });
+
+  doc.setTextColor(...DARK);
+  doc.setFontSize(13);
+  doc.setFont("helvetica", "bold");
+  doc.text(outgoing.name || "—", colPad + 5, topY + 18);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...GRAY);
+  doc.text(outgoing.rank || "—", colPad + 5, topY + 24);
+  if (outgoing.beltNumber) {
+    doc.setFontSize(8);
+    doc.setFont("courier", "normal");
+    doc.text(`Belt: ${outgoing.beltNumber}`, colPad + 5, topY + 30);
+  }
+  if (outgoing.remarks) {
+    doc.setFontSize(7.5);
+    doc.setFont("helvetica", "italic");
+    doc.setTextColor(...AMBER);
+    doc.text(`Note: ${outgoing.remarks}`, colPad + 5, topY + 36, { maxWidth: colW - 8 });
+  }
+
+  // Incoming officer — right box
+  const rightX = colPad * 2 + colW;
+  doc.setFillColor(...LIGHT);
+  doc.roundedRect(rightX, topY, colW, boxH, 3, 3, "F");
+  doc.setFillColor(...GREEN);
+  doc.roundedRect(rightX, topY, colW, 8, 3, 3, "F");
+  doc.rect(rightX, topY + 5, colW, 3, "F");
+
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...WHITE);
+  doc.text("INCOMING OFFICER  (Taking Over)", rightX + colW / 2, topY + 5.5, { align: "center" });
+
+  doc.setTextColor(...DARK);
+  doc.setFontSize(13);
+  doc.setFont("helvetica", "bold");
+  doc.text(incoming.name || "—", rightX + 5, topY + 18);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...GRAY);
+  doc.text(incoming.rank || "—", rightX + 5, topY + 24);
+  if (incoming.beltNumber) {
+    doc.setFontSize(8);
+    doc.setFont("courier", "normal");
+    doc.text(`Belt: ${incoming.beltNumber}`, rightX + 5, topY + 30);
+  }
+  if (incoming.remarks) {
+    doc.setFontSize(7.5);
+    doc.setFont("helvetica", "italic");
+    doc.setTextColor(...AMBER);
+    doc.text(`Note: ${incoming.remarks}`, rightX + 5, topY + 36, { maxWidth: colW - 8 });
+  }
+
+  // ── Section heading ────────────────────────────────────────────────────────
+  const tableStartY = topY + boxH + 8;
+  doc.setFillColor(...NAVY);
+  doc.rect(colPad, tableStartY - 5, pageWidth - colPad * 2, 7, "F");
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...WHITE);
+  doc.text(`DUTIES BEING HANDED OVER  (${entries.length} assignment${entries.length !== 1 ? "s" : ""})`, pageWidth / 2, tableStartY - 0.5, { align: "center" });
+
+  // ── Assignments table ──────────────────────────────────────────────────────
+  const rows = entries.map((entry, idx) => {
+    const typeLabel = entry.dutyType === "unlimited" ? "UNLIMITED" : "FIXED";
+    const startStr  = format(new Date(entry.startDateTime), "dd MMM yyyy, HH:mm");
+    const endStr    = entry.endDateTime
+      ? format(new Date(entry.endDateTime), "dd MMM yyyy, HH:mm")
+      : "Until Released";
+
+    return [
+      String(idx + 1),
+      entry.personnel?.name ?? "—",
+      entry.personnel?.beltNumber ?? "—",
+      entry.personnel?.rank ?? "—",
+      entry.dutyPoint?.name ?? "—",
+      entry.dutyPoint?.location ?? "—",
+      typeLabel,
+      startStr,
+      endStr,
+    ];
+  });
+
+  autoTable(doc, {
+    startY: tableStartY + 4,
+    head: [["#", "Personnel Name", "Belt No.", "Rank", "Duty Point", "Location", "Type", "Start Time", "End Time"]],
+    body: rows,
+    styles: {
+      fontSize: 8,
+      cellPadding: { top: 2.5, right: 3, bottom: 2.5, left: 3 },
+      textColor: DARK,
+    },
+    headStyles: {
+      fillColor: NAVY,
+      textColor: WHITE,
+      fontStyle: "bold",
+      fontSize: 7.5,
+    },
+    alternateRowStyles: { fillColor: [247, 249, 255] as [number, number, number] },
+    columnStyles: {
+      0: { cellWidth: 8,  halign: "center" },
+      1: { cellWidth: 38 },
+      2: { cellWidth: 20, halign: "center", font: "courier" },
+      3: { cellWidth: 28 },
+      4: { cellWidth: 30 },
+      5: { cellWidth: 30 },
+      6: { cellWidth: 18, halign: "center" },
+      7: { cellWidth: 26, halign: "center" },
+      8: { cellWidth: 26, halign: "center" },
+    },
+    didParseCell(data) {
+      if (data.column.index === 6 && data.section === "body") {
+        const val = String(data.cell.text).trim();
+        data.cell.styles.textColor = val === "UNLIMITED" ? RED : BLUE;
+        data.cell.styles.fontStyle = "bold";
+      }
+    },
+    margin: { left: colPad, right: colPad },
+  });
+
+  // ── No entries message ─────────────────────────────────────────────────────
+  if (entries.length === 0) {
+    const emptyY = tableStartY + 14;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "italic");
+    doc.setTextColor(...GRAY);
+    doc.text("No duty assignments selected for handover.", pageWidth / 2, emptyY, { align: "center" });
+  }
+
+  // ── Signature block ────────────────────────────────────────────────────────
+  const finalY = (doc as jsPDF & { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY ?? 180;
+  const sigY   = Math.min(finalY + 18, 240);
+
+  // Gold divider
+  doc.setFillColor(...GOLD);
+  doc.rect(colPad, sigY - 4, pageWidth - colPad * 2, 0.5, "F");
+
+  doc.setFontSize(7.5);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...NAVY);
+  doc.text("SIGNATURES", pageWidth / 2, sigY, { align: "center" });
+
+  const sigBoxW = 50;
+  const sigBoxH = 22;
+  const sigPairs: Array<{ x: number; label: string; sub: string }> = [
+    { x: colPad + 5,                   label: "OUTGOING OFFICER", sub: `${outgoing.name}\n${outgoing.rank}` },
+    { x: pageWidth / 2 - sigBoxW / 2,  label: witnessName ? "WITNESS" : "OFFICER IN CHARGE", sub: witnessName ? `${witnessName}${witnessRank ? `\n${witnessRank}` : ""}` : "Signature & Stamp" },
+    { x: pageWidth - colPad - 5 - sigBoxW, label: "INCOMING OFFICER", sub: `${incoming.name}\n${incoming.rank}` },
+  ];
+
+  sigPairs.forEach(({ x, label, sub }) => {
+    doc.setFillColor(...LIGHT);
+    doc.roundedRect(x, sigY + 4, sigBoxW, sigBoxH, 2, 2, "F");
+    doc.setDrawColor(...NAVY);
+    doc.setLineWidth(0.4);
+    doc.line(x + 4, sigY + 19, x + sigBoxW - 4, sigY + 19);
+
+    doc.setFontSize(6.5);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...NAVY);
+    doc.text(label, x + sigBoxW / 2, sigY + 23, { align: "center" });
+
+    const subLines = sub.split("\n");
+    doc.setFontSize(6);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...GRAY);
+    subLines.forEach((line, li) => {
+      doc.text(line, x + sigBoxW / 2, sigY + 26 + li * 3.5, { align: "center" });
+    });
+  });
+
+  // ── Certification text ────────────────────────────────────────────────────
+  const certY = sigY + sigBoxH + 14;
+  doc.setFillColor(...LIGHT);
+  doc.roundedRect(colPad, certY, pageWidth - colPad * 2, 18, 2, 2, "F");
+  doc.setFontSize(7.5);
+  doc.setFont("helvetica", "italic");
+  doc.setTextColor(...DARK);
+  const certText = `I, ${outgoing.name} (${outgoing.rank}), hereby certify that I have handed over the above duty assignments to ${incoming.name} (${incoming.rank}) on ${format(now, "dd MMMM yyyy")} at ${format(now, "HH:mm")} hours. All duties listed above have been communicated and acknowledged.`;
+  doc.text(certText, colPad + 5, certY + 7, { maxWidth: pageWidth - colPad * 2 - 10 });
+
+  // ── Footer ────────────────────────────────────────────────────────────────
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFillColor(...NAVY);
+    doc.rect(0, doc.internal.pageSize.getHeight() - 8, pageWidth, 8, "F");
+    doc.setFontSize(6.5);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...WHITE);
+    doc.text(
+      `Ayodhya Police Line — Duty Handover Certificate  |  CONFIDENTIAL  |  Page ${i} of ${pageCount}`,
+      pageWidth / 2,
+      doc.internal.pageSize.getHeight() - 3,
+      { align: "center" },
+    );
+  }
+
+  // ── Save ──────────────────────────────────────────────────────────────────
+  const dateStr = format(now, "yyyyMMdd_HHmm");
+  doc.save(`AyodhyaPolice_Handover_${dateStr}.pdf`);
+}
