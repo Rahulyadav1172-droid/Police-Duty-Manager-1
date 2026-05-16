@@ -11,6 +11,7 @@ import DutyPointsManagement from "@/pages/duty-points";
 import RosterHistory from "@/pages/roster";
 import AssignDuty from "@/pages/assign";
 import HandoverReport from "@/pages/handover";
+import MusterRoll from "@/pages/muster";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ function Router() {
         <Route path="/roster" component={RosterHistory} />
         <Route path="/assign" component={AssignDuty} />
         <Route path="/handover" component={HandoverReport} />
+        <Route path="/muster" component={MusterRoll} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

@@ -524,3 +524,322 @@ export function generateHandoverReport(opts: HandoverOptions): void {
   const dateStr = format(now, "yyyyMMdd_HHmm");
   doc.save(`AyodhyaPolice_Handover_${dateStr}.pdf`);
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MUSTER ROLL / DAILY ATTENDANCE REGISTER
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type MusterPersonnel = {
+  id: number;
+  name: string;
+  beltNumber: string;
+  rank: string;
+  mobileNumber: string;
+  createdAt: string;
+};
+
+export type MusterRosterEntry = {
+  id: number;
+  dutyType: string;
+  startDateTime: string;
+  endDateTime: string | null;
+  status: string;
+  dutyPoint?: {
+    name: string;
+    location: string;
+  };
+};
+
+export type MusterOptions = {
+  personnel: MusterPersonnel[];
+  activeRoster: MusterRosterEntry[];
+  paradeDateTime?: Date;
+  paradeName?: string;
+  commandingOfficerName?: string;
+  commandingOfficerRank?: string;
+  remarks?: string;
+};
+
+const RANK_ORDER: Record<string, number> = {
+  Inspector: 1,
+  "Sub-Inspector": 2,
+  "Head Constable": 3,
+  Constable: 4,
+};
+
+export function generateMusterRoll(opts: MusterOptions): void {
+  const {
+    personnel,
+    activeRoster,
+    paradeName,
+    commandingOfficerName,
+    commandingOfficerRank,
+    remarks,
+  } = opts;
+  const now = opts.paradeDateTime ?? new Date();
+
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  const NAVY  = [13, 27, 62]    as [number, number, number];
+  const GOLD  = [180, 140, 40]  as [number, number, number];
+  const WHITE = [255, 255, 255] as [number, number, number];
+  const LIGHT = [240, 244, 255] as [number, number, number];
+  const DARK  = [20, 20, 30]    as [number, number, number];
+  const GRAY  = [100, 100, 110] as [number, number, number];
+  const GREEN = [22, 101, 52]   as [number, number, number];
+  const RED   = [153, 27, 27]   as [number, number, number];
+
+  // ── Header ────────────────────────────────────────────────────────────────
+  doc.setFillColor(...NAVY);
+  doc.rect(0, 0, pageWidth, 40, "F");
+  doc.setFillColor(...GOLD);
+  doc.rect(0, 38, pageWidth, 2, "F");
+
+  // Emblem circles
+  [16, pageWidth - 16].forEach((cx) => {
+    doc.setFillColor(...WHITE);
+    doc.circle(cx, 20, 11, "F");
+    doc.setFontSize(6);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...NAVY);
+    doc.text("AYODHYA", cx, 17, { align: "center" });
+    doc.text("POLICE", cx, 21, { align: "center" });
+    doc.text("LINE", cx, 25, { align: "center" });
+  });
+
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...WHITE);
+  doc.text("AYODHYA POLICE LINE", pageWidth / 2, 13, { align: "center" });
+  doc.setFontSize(11);
+  doc.text(paradeName ? paradeName.toUpperCase() : "DAILY MUSTER ROLL", pageWidth / 2, 22, { align: "center" });
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...GOLD);
+  doc.text(
+    `Date: ${format(now, "dd MMMM yyyy (EEEE)")}   |   Parade Time: ${format(now, "HH:mm")} hrs`,
+    pageWidth / 2,
+    31,
+    { align: "center" },
+  );
+
+  // ── Summary stat strip ────────────────────────────────────────────────────
+  const onDutyIds = new Set(activeRoster.map((r) => r.id));
+
+  const totalStrength = personnel.length;
+  const onDutyCount   = activeRoster.length;
+  const availCount    = totalStrength - onDutyCount;
+
+  const rankGroups = Object.keys(RANK_ORDER);
+  const rankBreakdown = rankGroups.map((rank) => ({
+    rank,
+    total:   personnel.filter((p) => p.rank === rank).length,
+    onDuty:  activeRoster.filter((r) => {
+      const p = personnel.find((pe) => pe.id === (r as MusterRosterEntry & { personnelId?: number }).personnelId);
+      return p?.rank === rank;
+    }).length,
+  }));
+
+  doc.setFillColor(...LIGHT);
+  doc.rect(0, 40, pageWidth, 18, "F");
+
+  const statCols = [
+    { label: "TOTAL STRENGTH", value: String(totalStrength) },
+    { label: "ON DUTY",        value: String(onDutyCount),   color: RED   },
+    { label: "AVAILABLE",      value: String(availCount),    color: GREEN },
+  ];
+  const statW = pageWidth / statCols.length;
+  statCols.forEach((s, i) => {
+    const cx = statW * i + statW / 2;
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...(s.color ?? NAVY));
+    doc.text(s.value, cx, 51, { align: "center" });
+    doc.setFontSize(6.5);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...GRAY);
+    doc.text(s.label, cx, 55, { align: "center" });
+  });
+
+  // ── Rank-wise breakdown bar ───────────────────────────────────────────────
+  doc.setFillColor(...NAVY);
+  doc.rect(0, 58, pageWidth, 7, "F");
+  doc.setFontSize(6.5);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...WHITE);
+
+  const rankW = pageWidth / rankBreakdown.length;
+  rankBreakdown.forEach((rb, i) => {
+    const cx = rankW * i + rankW / 2;
+    const shortRank = rb.rank === "Sub-Inspector" ? "SI" : rb.rank === "Head Constable" ? "HC" : rb.rank.substring(0, 4).toUpperCase();
+    doc.text(`${shortRank}: ${rb.onDuty}/${rb.total}`, cx, 63, { align: "center" });
+  });
+
+  // ── Personnel table ───────────────────────────────────────────────────────
+  // Sort by rank order then by name
+  const activeRosterMap = new Map<number, MusterRosterEntry>();
+  activeRoster.forEach((r) => {
+    const entry = r as MusterRosterEntry & { personnelId?: number };
+    if (entry.personnelId) activeRosterMap.set(entry.personnelId, r);
+  });
+
+  const sorted = [...personnel].sort((a, b) => {
+    const ro = (RANK_ORDER[a.rank] ?? 9) - (RANK_ORDER[b.rank] ?? 9);
+    return ro !== 0 ? ro : a.name.localeCompare(b.name);
+  });
+
+  const rows = sorted.map((p, idx) => {
+    const duty = activeRosterMap.get(p.id);
+    const statusLabel = duty ? "ON DUTY" : "AVAILABLE";
+    const dutyPointName = duty?.dutyPoint?.name ?? "—";
+    const dutyType = duty
+      ? duty.dutyType === "unlimited" ? "UNLIMITED" : "FIXED"
+      : "—";
+    const startTime = duty
+      ? format(new Date(duty.startDateTime), "dd/MM HH:mm")
+      : "—";
+    const endTime = duty
+      ? duty.endDateTime
+        ? format(new Date(duty.endDateTime), "dd/MM HH:mm")
+        : "—"
+      : "—";
+
+    return [
+      String(idx + 1),
+      p.name,
+      p.beltNumber,
+      p.rank,
+      statusLabel,
+      dutyPointName,
+      dutyType,
+      startTime,
+      endTime,
+      "",    // signature column — left blank for physical signing
+    ];
+  });
+
+  autoTable(doc, {
+    startY: 70,
+    head: [["S.No", "Name", "Belt No.", "Rank", "Status", "Duty Post", "Type", "Start", "End", "Signature"]],
+    body: rows,
+    styles: {
+      fontSize: 7.5,
+      cellPadding: { top: 2, right: 2.5, bottom: 2, left: 2.5 },
+      textColor: DARK,
+      lineColor: [200, 210, 230] as [number, number, number],
+      lineWidth: 0.2,
+    },
+    headStyles: {
+      fillColor: NAVY,
+      textColor: WHITE,
+      fontStyle: "bold",
+      fontSize: 7,
+      halign: "center",
+    },
+    alternateRowStyles: {
+      fillColor: [247, 249, 255] as [number, number, number],
+    },
+    columnStyles: {
+      0:  { cellWidth: 8,  halign: "center" },
+      1:  { cellWidth: 34 },
+      2:  { cellWidth: 16, halign: "center", font: "courier" },
+      3:  { cellWidth: 22 },
+      4:  { cellWidth: 16, halign: "center", fontStyle: "bold" },
+      5:  { cellWidth: 28 },
+      6:  { cellWidth: 15, halign: "center" },
+      7:  { cellWidth: 16, halign: "center" },
+      8:  { cellWidth: 16, halign: "center" },
+      9:  { cellWidth: 22 },
+    },
+    didParseCell(data) {
+      if (data.column.index === 4 && data.section === "body") {
+        const val = String(data.cell.text).trim();
+        data.cell.styles.textColor = val === "ON DUTY" ? RED : GREEN;
+      }
+      if (data.column.index === 6 && data.section === "body") {
+        const val = String(data.cell.text).trim();
+        if (val === "UNLIMITED") data.cell.styles.textColor = RED;
+        else if (val === "FIXED") data.cell.styles.textColor = [29, 78, 216] as [number, number, number];
+      }
+    },
+    margin: { left: 8, right: 8 },
+  });
+
+  // ── Remarks block ─────────────────────────────────────────────────────────
+  const finalY = (doc as jsPDF & { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY ?? 220;
+  let currentY = finalY + 8;
+
+  if (remarks && remarks.trim()) {
+    doc.setFillColor(...LIGHT);
+    doc.roundedRect(8, currentY, pageWidth - 16, 14, 2, 2, "F");
+    doc.setFontSize(7.5);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...NAVY);
+    doc.text("REMARKS:", 13, currentY + 6);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...DARK);
+    doc.text(remarks, 37, currentY + 6, { maxWidth: pageWidth - 50 });
+    currentY += 20;
+  }
+
+  // ── Certification + Signature strip ───────────────────────────────────────
+  const sigY = Math.min(currentY + 4, pageHeight - 52);
+
+  doc.setFillColor(...GOLD);
+  doc.rect(8, sigY, pageWidth - 16, 0.5, "F");
+
+  doc.setFontSize(7.5);
+  doc.setFont("helvetica", "italic");
+  doc.setTextColor(...DARK);
+  const cert = `Certified that the above muster roll is correct and all personnel have been accounted for as on ${format(now, "dd MMMM yyyy")} at ${format(now, "HH:mm")} hours.`;
+  doc.text(cert, pageWidth / 2, sigY + 7, { align: "center", maxWidth: pageWidth - 40 });
+
+  // Signature boxes
+  const sigBoxW = 50;
+  const sigBoxH = 22;
+  const sigItems: Array<{ x: number; label: string; sub: string }> = [
+    { x: 10,                              label: "PREPARED BY",          sub: "Duty Writer / Clerk" },
+    { x: pageWidth / 2 - sigBoxW / 2,    label: commandingOfficerName ? commandingOfficerName.toUpperCase() : "COMMANDING OFFICER",
+      sub: commandingOfficerRank ?? "Signature & Stamp" },
+    { x: pageWidth - 10 - sigBoxW,       label: "OFFICER IN CHARGE",     sub: "Reserve Inspector / Adjutant" },
+  ];
+
+  sigItems.forEach(({ x, label, sub }) => {
+    doc.setFillColor(...LIGHT);
+    doc.roundedRect(x, sigY + 14, sigBoxW, sigBoxH, 2, 2, "F");
+    doc.setDrawColor(...NAVY);
+    doc.setLineWidth(0.3);
+    doc.line(x + 4, sigY + 28, x + sigBoxW - 4, sigY + 28);
+    doc.setFontSize(6.5);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...NAVY);
+    doc.text(label, x + sigBoxW / 2, sigY + 32, { align: "center" });
+    doc.setFontSize(6);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...GRAY);
+    doc.text(sub, x + sigBoxW / 2, sigY + 35.5, { align: "center" });
+  });
+
+  // ── Footer ────────────────────────────────────────────────────────────────
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFillColor(...NAVY);
+    doc.rect(0, pageHeight - 8, pageWidth, 8, "F");
+    doc.setFontSize(6.5);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...WHITE);
+    doc.text(
+      `Ayodhya Police Line — Muster Roll  |  ${format(now, "dd MMM yyyy")}  |  OFFICIAL RECORD  |  Page ${i} of ${pageCount}`,
+      pageWidth / 2,
+      pageHeight - 3,
+      { align: "center" },
+    );
+  }
+
+  // ── Save ──────────────────────────────────────────────────────────────────
+  const dateStr = format(now, "yyyyMMdd_HHmm");
+  doc.save(`AyodhyaPolice_MusterRoll_${dateStr}.pdf`);
+}
