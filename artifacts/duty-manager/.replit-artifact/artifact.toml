@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Ayodhya Police Duty Manager"
+version = "1.0.0"
+id = "artifacts/duty-manager"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22438
+
+[services.development]
+run = "pnpm --filter @workspace/duty-manager run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/duty-manager", "run", "build" ]
+publicDir = "artifacts/duty-manager/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22438"
+BASE_PATH = "/"

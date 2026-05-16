@@ -3,13 +3,19 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Ayodhya Police Duty Management API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: personnel
+    description: Police personnel management
+  - name: duty-points
+    description: Duty point locations
+  - name: roster
+    description: Duty roster/assignment management
 paths:
   /healthz:
     get:
@@ -24,6 +30,307 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /personnel:
+    get:
+      operationId: listPersonnel
+      tags: [personnel]
+      summary: List all personnel
+      responses:
+        "200":
+          description: List of all police personnel
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Personnel"
+    post:
+      operationId: createPersonnel
+      tags: [personnel]
+      summary: Add a new personnel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PersonnelInput"
+      responses:
+        "201":
+          description: Personnel created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Personnel"
+        "400":
+          description: Invalid input
+
+  /personnel/{id}:
+    get:
+      operationId: getPersonnel
+      tags: [personnel]
+      summary: Get a single personnel
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Personnel found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Personnel"
+        "404":
+          description: Not found
+    patch:
+      operationId: updatePersonnel
+      tags: [personnel]
+      summary: Update personnel details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PersonnelUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Personnel"
+        "404":
+          description: Not found
+    delete:
+      operationId: deletePersonnel
+      tags: [personnel]
+      summary: Delete personnel
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /duty-points:
+    get:
+      operationId: listDutyPoints
+      tags: [duty-points]
+      summary: List all duty points
+      responses:
+        "200":
+          description: List of duty points
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DutyPoint"
+    post:
+      operationId: createDutyPoint
+      tags: [duty-points]
+      summary: Create a new duty point
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DutyPointInput"
+      responses:
+        "201":
+          description: Duty point created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DutyPoint"
+        "400":
+          description: Invalid input
+
+  /duty-points/{id}:
+    patch:
+      operationId: updateDutyPoint
+      tags: [duty-points]
+      summary: Update a duty point
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DutyPointUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DutyPoint"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteDutyPoint
+      tags: [duty-points]
+      summary: Delete a duty point
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /roster:
+    get:
+      operationId: listRoster
+      tags: [roster]
+      summary: List all duty assignments
+      responses:
+        "200":
+          description: Full roster
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RosterEntry"
+    post:
+      operationId: assignDuty
+      tags: [roster]
+      summary: Assign duty to a personnel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RosterInput"
+      responses:
+        "201":
+          description: Duty assigned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RosterEntry"
+        "400":
+          description: Invalid input or personnel already on duty
+
+  /roster/live:
+    get:
+      operationId: getLiveBoard
+      tags: [roster]
+      summary: Get live duty board (on duty vs available)
+      responses:
+        "200":
+          description: Live duty board
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LiveBoard"
+
+  /roster/stats:
+    get:
+      operationId: getRosterStats
+      tags: [roster]
+      summary: Get roster statistics summary
+      responses:
+        "200":
+          description: Duty stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RosterStats"
+
+  /roster/{id}:
+    get:
+      operationId: getRosterEntry
+      tags: [roster]
+      summary: Get a single roster entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Roster entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RosterEntry"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateRosterEntry
+      tags: [roster]
+      summary: Update a roster entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RosterUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RosterEntry"
+        "404":
+          description: Not found
+
+  /roster/{id}/release:
+    post:
+      operationId: releaseFromDuty
+      tags: [roster]
+      summary: Release a personnel from duty (especially unlimited duty)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Released
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RosterEntry"
+        "404":
+          description: Not found
+        "400":
+          description: Already released
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +341,216 @@ components:
       required:
         - status
 
+    Personnel:
+      type: object
+      required: [id, name, beltNumber, mobileNumber, rank, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        beltNumber:
+          type: string
+        mobileNumber:
+          type: string
+        rank:
+          type: string
+          enum: [Constable, Head Constable, Sub-Inspector, Inspector]
+        createdAt:
+          type: string
+          format: date-time
+
+    PersonnelInput:
+      type: object
+      required: [name, beltNumber, mobileNumber, rank]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        beltNumber:
+          type: string
+          minLength: 1
+        mobileNumber:
+          type: string
+          minLength: 10
+        rank:
+          type: string
+          enum: [Constable, Head Constable, Sub-Inspector, Inspector]
+
+    PersonnelUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        beltNumber:
+          type: string
+          minLength: 1
+        mobileNumber:
+          type: string
+          minLength: 10
+        rank:
+          type: string
+          enum: [Constable, Head Constable, Sub-Inspector, Inspector]
+
+    DutyPoint:
+      type: object
+      required: [id, name, location, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        location:
+          type: string
+        description:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    DutyPointInput:
+      type: object
+      required: [name, location]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        location:
+          type: string
+          minLength: 1
+        description:
+          type: string
+
+    DutyPointUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        location:
+          type: string
+          minLength: 1
+        description:
+          type: string
+
+    RosterEntry:
+      type: object
+      required: [id, personnelId, dutyPointId, dutyType, startDateTime, status, createdAt]
+      properties:
+        id:
+          type: integer
+        personnelId:
+          type: integer
+        dutyPointId:
+          type: integer
+        dutyType:
+          type: string
+          enum: [unlimited, fixed]
+        startDateTime:
+          type: string
+          format: date-time
+        endDateTime:
+          type: ["string", "null"]
+          format: date-time
+        status:
+          type: string
+          enum: [active, released, expired]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        personnel:
+          $ref: "#/components/schemas/Personnel"
+        dutyPoint:
+          $ref: "#/components/schemas/DutyPoint"
+
+    RosterInput:
+      type: object
+      required: [personnelId, dutyPointId, dutyType, startDateTime]
+      properties:
+        personnelId:
+          type: integer
+        dutyPointId:
+          type: integer
+        dutyType:
+          type: string
+          enum: [unlimited, fixed]
+        startDateTime:
+          type: string
+          format: date-time
+        endDateTime:
+          type: string
+          format: date-time
+        notes:
+          type: string
+
+    RosterUpdate:
+      type: object
+      properties:
+        dutyPointId:
+          type: integer
+        dutyType:
+          type: string
+          enum: [unlimited, fixed]
+        startDateTime:
+          type: string
+          format: date-time
+        endDateTime:
+          type: string
+          format: date-time
+        notes:
+          type: string
+        status:
+          type: string
+          enum: [active, released, expired]
+
+    LiveBoard:
+      type: object
+      required: [onDuty, available, totalPersonnel, totalDutyPoints]
+      properties:
+        onDuty:
+          type: array
+          items:
+            $ref: "#/components/schemas/RosterEntry"
+        available:
+          type: array
+          items:
+            $ref: "#/components/schemas/Personnel"
+        totalPersonnel:
+          type: integer
+        totalDutyPoints:
+          type: integer
+
+    RosterStats:
+      type: object
+      required: [totalOnDuty, totalAvailable, totalPersonnel, unlimitedDuty, fixedDuty, byRank]
+      properties:
+        totalOnDuty:
+          type: integer
+        totalAvailable:
+          type: integer
+        totalPersonnel:
+          type: integer
+        unlimitedDuty:
+          type: integer
+        fixedDuty:
+          type: integer
+        byRank:
+          type: array
+          items:
+            $ref: "#/components/schemas/RankStat"
+
+    RankStat:
+      type: object
+      required: [rank, onDuty, available, total]
+      properties:
+        rank:
+          type: string
+        onDuty:
+          type: integer
+        available:
+          type: integer
+        total:
+          type: integer
