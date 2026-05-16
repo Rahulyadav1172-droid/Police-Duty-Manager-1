@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Search, LogOut, CheckCircle2, XCircle } from "lucide-react";
+import { Search, LogOut, CheckCircle2, XCircle, FileDown } from "lucide-react";
+import { generateShiftReport } from "@/lib/report";
 
 import { 
   useListRoster, 
@@ -72,6 +73,7 @@ export default function RosterHistory() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 w-full"
+              data-testid="input-roster-search"
             />
           </div>
           <div className="flex rounded-md shadow-sm w-full sm:w-auto">
@@ -79,6 +81,7 @@ export default function RosterHistory() {
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
+                data-testid={`filter-status-${status}`}
                 className={`px-3 py-2 text-sm font-medium border-y border-l first:border-l last:border-r first:rounded-l-md last:rounded-r-md transition-colors
                   ${statusFilter === status 
                     ? "bg-primary text-primary-foreground border-primary z-10" 
@@ -89,6 +92,16 @@ export default function RosterHistory() {
               </button>
             ))}
           </div>
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+            disabled={filteredRoster.length === 0 || isLoading}
+            onClick={() => generateShiftReport({ entries: filteredRoster, statusFilter })}
+            data-testid="button-export-pdf"
+          >
+            <FileDown className="w-4 h-4" />
+            Export PDF
+          </Button>
         </div>
       </div>
 
