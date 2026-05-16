@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, or, isNull, lt, inArray, not } from "drizzle-orm";
+import { eq, and, isNull, lt, not } from "drizzle-orm";
 import { db, rosterTable, personnelTable, dutyPointsTable } from "@workspace/db";
 import {
   AssignDutyBody,
@@ -14,6 +14,7 @@ import {
   GetLiveBoardResponse,
   GetRosterStatsResponse,
 } from "@workspace/api-zod";
+import { notifyDutyAssigned, notifyDutyReleased } from "../lib/sms";
 
 const router: IRouter = Router();
 
@@ -145,6 +146,21 @@ router.post("/roster", async (req, res): Promise<void> => {
   const [entry] = await db.insert(rosterTable).values(insertData).returning();
   const full = await buildRosterEntry(entry.id);
   res.status(201).json(GetRosterEntryResponse.parse(full));
+
+  // Fire SMS non-blocking — response already sent
+  if (full?.personnel && full?.dutyPoint) {
+    notifyDutyAssigned({
+      name: full.personnel.name,
+      rank: full.personnel.rank,
+      beltNumber: full.personnel.beltNumber,
+      mobile: full.personnel.mobileNumber,
+      dutyPointName: full.dutyPoint.name,
+      dutyPointLocation: full.dutyPoint.location,
+      dutyType: full.dutyType as "unlimited" | "fixed",
+      startDateTime: new Date(full.startDateTime),
+      endDateTime: full.endDateTime ? new Date(full.endDateTime) : null,
+    }).catch((err) => req.log.error({ err }, "SMS assign notification failed"));
+  }
 });
 
 router.get("/roster/live", async (req, res): Promise<void> => {
@@ -325,6 +341,18 @@ router.post("/roster/:id/release", async (req, res): Promise<void> => {
 
   const full = await buildRosterEntry(entry.id);
   res.json(ReleaseFromDutyResponse.parse(full));
+
+  // Fire SMS non-blocking — response already sent
+  if (full?.personnel && full?.dutyPoint) {
+    notifyDutyReleased({
+      name: full.personnel.name,
+      rank: full.personnel.rank,
+      beltNumber: full.personnel.beltNumber,
+      mobile: full.personnel.mobileNumber,
+      dutyPointName: full.dutyPoint.name,
+      releasedAt: new Date(),
+    }).catch((err) => req.log.error({ err }, "SMS release notification failed"));
+  }
 });
 
 export default router;
