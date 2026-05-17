@@ -126,7 +126,7 @@ export default function LoginPage() {
             <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-4 py-3">
               <Lock className="w-4 h-4 text-blue-400 shrink-0" />
               <span className="text-white font-semibold text-sm">
-                {isAdmin ? "Ayodhya Police Line" : "Senior Officer — View Only"}
+                {isAdmin ? "Ayodhya Police Line" : "Senior Officer"}
               </span>
             </div>
           </div>
