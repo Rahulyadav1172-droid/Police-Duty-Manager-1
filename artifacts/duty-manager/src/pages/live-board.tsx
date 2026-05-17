@@ -13,6 +13,7 @@ import {
   useReleaseFromDuty,
   useGetActiveLeavesToday,
 } from "@workspace/api-client-react";
+import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,9 @@ export default function LiveBoard() {
       refetchInterval: 30000,
     },
   });
+
+  const { role } = useAuth();
+  const isAdmin = role === "admin";
 
   const releaseMutation = useReleaseFromDuty({
     mutation: {
@@ -304,17 +308,19 @@ export default function LiveBoard() {
                         </div>
                       </div>
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => releaseMutation.mutate({ id: entry.id })}
-                        disabled={releaseMutation.isPending}
-                        data-testid={`btn-release-${entry.id}`}
-                        className="shrink-0"
-                      >
-                        <LogOut className="w-4 h-4 mr-2" />
-                        Release
-                      </Button>
+                      {isAdmin && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => releaseMutation.mutate({ id: entry.id })}
+                          disabled={releaseMutation.isPending}
+                          data-testid={`btn-release-${entry.id}`}
+                          className="shrink-0"
+                        >
+                          <LogOut className="w-4 h-4 mr-2" />
+                          Release
+                        </Button>
+                      )}
                     </CardContent>
                   </Card>
                 ))

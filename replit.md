@@ -1,6 +1,6 @@
-# [Project name]
+# Ayodhya Police Duty Manager
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Full-stack web app for managing police personnel duty assignments, attendance, leave, and reports at Ayodhya Police Line.
 
 ## Run & Operate
 

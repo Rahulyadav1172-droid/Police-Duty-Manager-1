@@ -1,4 +1,4 @@
-import { ShieldAlert, Users, MapPin, ListOrdered, CalendarCheck, Search, ArrowLeftRight, ClipboardList, PackageOpen, CalendarOff, LogOut, KeyRound, BarChart3, Fingerprint, Menu, X } from "lucide-react";
+import { ShieldAlert, Users, MapPin, ListOrdered, CalendarCheck, Search, ArrowLeftRight, ClipboardList, PackageOpen, CalendarOff, LogOut, KeyRound, BarChart3, Fingerprint, Menu, X, Star, ShieldCheck } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
@@ -9,10 +9,25 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+const ALL_NAV = [
+  { name: "Live Board",       href: "/",            icon: ShieldAlert,  adminOnly: false },
+  { name: "Assign Duty",      href: "/assign",      icon: CalendarCheck, adminOnly: true  },
+  { name: "Roster History",   href: "/roster",      icon: ListOrdered,  adminOnly: false },
+  { name: "Handover Report",  href: "/handover",    icon: ArrowLeftRight, adminOnly: false },
+  { name: "Muster Roll",      href: "/muster",      icon: ClipboardList, adminOnly: false },
+  { name: "Transfer Receipt", href: "/transfer",    icon: PackageOpen,  adminOnly: false },
+  { name: "Leave Register",   href: "/leave",       icon: CalendarOff,  adminOnly: false },
+  { name: "Attendance",       href: "/attendance",  icon: BarChart3,    adminOnly: false },
+  { name: "Biometric",        href: "/biometric",   icon: Fingerprint,  adminOnly: false },
+  { name: "Personnel",        href: "/personnel",   icon: Users,        adminOnly: true  },
+  { name: "Duty Points",      href: "/duty-points", icon: MapPin,       adminOnly: true  },
+];
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
-  const { logout, changePassword } = useAuth();
+  const { logout, changePassword, role } = useAuth();
   const { toast } = useToast();
+  const isAdmin = role === "admin";
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [changePassOpen, setChangePassOpen] = useState(false);
@@ -22,33 +37,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNext, setShowNext] = useState(false);
 
-  // Close sidebar on route change (mobile)
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [location]);
+  useEffect(() => { setSidebarOpen(false); }, [location]);
 
-  // Close sidebar on resize to desktop
   useEffect(() => {
-    const handler = () => {
-      if (window.innerWidth >= 768) setSidebarOpen(false);
-    };
+    const handler = () => { if (window.innerWidth >= 768) setSidebarOpen(false); };
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  const navigation = [
-    { name: "Live Board",       href: "/",           icon: ShieldAlert },
-    { name: "Assign Duty",      href: "/assign",     icon: CalendarCheck },
-    { name: "Roster History",   href: "/roster",     icon: ListOrdered },
-    { name: "Handover Report",  href: "/handover",   icon: ArrowLeftRight },
-    { name: "Muster Roll",      href: "/muster",     icon: ClipboardList },
-    { name: "Transfer Receipt", href: "/transfer",   icon: PackageOpen },
-    { name: "Leave Register",   href: "/leave",      icon: CalendarOff },
-    { name: "Attendance",       href: "/attendance", icon: BarChart3 },
-    { name: "Biometric",        href: "/biometric",  icon: Fingerprint },
-    { name: "Personnel",        href: "/personnel",  icon: Users },
-    { name: "Duty Points",      href: "/duty-points",icon: MapPin },
-  ];
+  const navigation = ALL_NAV.filter(item => isAdmin || !item.adminOnly);
 
   function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
@@ -70,19 +67,31 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-white flex items-center justify-center">
             <img src="/up-police-logo.png" alt="UP Police" className="w-9 h-9 object-contain" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h1 className="font-bold text-base leading-tight uppercase tracking-wide">Duty Manager</h1>
             <p className="text-xs text-sidebar-foreground/60 uppercase tracking-widest font-semibold">Ayodhya Police</p>
           </div>
-          {/* Close button — mobile only */}
           <button
             onClick={() => setSidebarOpen(false)}
-            className="ml-auto md:hidden text-sidebar-foreground/60 hover:text-sidebar-foreground"
+            className="ml-auto md:hidden text-sidebar-foreground/60 hover:text-sidebar-foreground shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Role badge */}
+        <div className={`mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+          isAdmin
+            ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+            : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+        }`}>
+          {isAdmin
+            ? <><ShieldCheck className="w-3 h-3" /> Admin</>
+            : <><Star className="w-3 h-3" /> Senior Officer — View Only</>
+          }
+        </div>
       </div>
+
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navigation.map((item) => {
           const isActive = location === item.href;
@@ -103,6 +112,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           );
         })}
       </nav>
+
       <div className="p-3 border-t border-sidebar-border/50 space-y-1">
         <button
           onClick={() => { setChangePassOpen(true); setSidebarOpen(false); }}
@@ -125,7 +135,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background flex w-full font-sans">
 
-      {/* ── Mobile overlay ─────────────────────────────────────────────── */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
@@ -133,8 +142,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      {/* ── Sidebar ────────────────────────────────────────────────────── */}
-      {/* Desktop: always visible, relative. Mobile: fixed drawer sliding from left. */}
       <aside
         className={`
           fixed inset-y-0 left-0 z-50 flex flex-col w-64
@@ -147,10 +154,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <SidebarContent />
       </aside>
 
-      {/* ── Main area ──────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0 max-h-screen overflow-hidden">
         <header className="h-14 md:h-16 flex items-center justify-between px-4 md:px-8 border-b bg-card shrink-0">
-          {/* Hamburger — mobile only */}
           <button
             className="md:hidden text-foreground p-1 rounded-md hover:bg-muted transition-colors"
             onClick={() => setSidebarOpen(true)}
@@ -172,19 +177,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 className="pl-9 pr-4 py-2 bg-muted/50 border-none rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary w-56"
               />
             </div>
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">AP</div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0 ${isAdmin ? "bg-primary" : "bg-amber-500"}`}>
+              {isAdmin ? "AP" : "SO"}
+            </div>
           </div>
         </header>
 
         <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 bg-muted/20">
+          {!isAdmin && (
+            <div className="mb-4 flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+              <Star className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+              <span>You are logged in as <strong>Senior Officer</strong> — view and export only. Contact admin to make changes.</span>
+            </div>
+          )}
           {children}
         </main>
       </div>
 
-      {/* Change Password Dialog */}
       <Dialog open={changePassOpen} onOpenChange={setChangePassOpen}>
         <DialogContent className="max-w-sm mx-4">
-          <DialogHeader><DialogTitle>Change Password</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Change {isAdmin ? "Admin" : "Senior Officer"} Password</DialogTitle></DialogHeader>
           <form onSubmit={handleChangePassword} className="space-y-4 pt-1">
             <div>
               <Label className="text-sm font-medium">Current Password</Label>

@@ -21,6 +21,7 @@ import {
   LeaveInputLeaveType,
   LeaveInputStatus,
 } from "@workspace/api-client-react";
+import { useAuth } from "@/hooks/use-auth";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -102,6 +103,8 @@ const today = new Date().toISOString().slice(0, 10);
 export default function LeaveManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { role } = useAuth();
+  const isAdmin = role === "admin";
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
@@ -218,10 +221,12 @@ export default function LeaveManagement() {
           <h1 className="text-2xl font-bold">Leave & Absence Register</h1>
           <p className="text-sm text-muted-foreground">Track sick leave, earned leave, casual leave, and absences.</p>
         </div>
-        <Button onClick={handleOpenAdd} className="gap-2 shrink-0">
-          <Plus className="w-4 h-4" />
-          Add Leave Record
-        </Button>
+        {isAdmin && (
+          <Button onClick={handleOpenAdd} className="gap-2 shrink-0">
+            <Plus className="w-4 h-4" />
+            Add Leave Record
+          </Button>
+        )}
       </div>
 
       {/* Stats */}
@@ -337,14 +342,16 @@ export default function LeaveManagement() {
                       {rec.reason || "—"}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(rec)}>
-                          <Edit className="w-4 h-4 text-blue-600" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => setDeleteId(rec.id)}>
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </div>
+                      {isAdmin && (
+                        <div className="flex items-center justify-end gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(rec)}>
+                            <Edit className="w-4 h-4 text-blue-600" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => setDeleteId(rec.id)}>
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 );

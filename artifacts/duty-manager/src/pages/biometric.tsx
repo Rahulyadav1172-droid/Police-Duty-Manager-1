@@ -11,6 +11,7 @@ import {
   useDeleteBiometricRecord,
   useListPersonnel,
 } from "@workspace/api-client-react";
+import { useAuth } from "@/hooks/use-auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,8 @@ import { RankBadge } from "@/components/rank-badge";
 export default function BiometricAttendance() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { role } = useAuth();
+  const isAdmin = role === "admin";
 
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
   const [view, setView] = useState<"summary" | "log">("summary");
@@ -111,9 +114,11 @@ export default function BiometricAttendance() {
           <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2">
             <RefreshCw className="w-4 h-4" /> Refresh
           </Button>
-          <Button size="sm" onClick={() => setPunchOpen(true)} className="gap-2">
-            <Plus className="w-4 h-4" /> Record Punch
-          </Button>
+          {isAdmin && (
+            <Button size="sm" onClick={() => setPunchOpen(true)} className="gap-2">
+              <Plus className="w-4 h-4" /> Record Punch
+            </Button>
+          )}
         </div>
       </div>
 
@@ -304,12 +309,14 @@ export default function BiometricAttendance() {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{r.deviceId ?? "—"}</TableCell>
                       <TableCell className="text-center">
-                        <button
-                          onClick={() => setDeleteTarget(r.id)}
-                          className="text-muted-foreground hover:text-red-500 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => setDeleteTarget(r.id)}
+                            className="text-muted-foreground hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))

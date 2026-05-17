@@ -1,11 +1,11 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { Layout } from "@/components/layout";
 import LoginPage from "@/pages/login";
-import { AuthContext, useAuthState } from "@/hooks/use-auth";
+import { AuthContext, useAuthState, useAuth } from "@/hooks/use-auth";
 
 import LiveBoard from "@/pages/live-board";
 import PersonnelManagement from "@/pages/personnel";
@@ -21,21 +21,37 @@ import BiometricAttendance from "@/pages/biometric";
 
 const queryClient = new QueryClient();
 
+function AdminRoute({ component: Component }: { component: React.ComponentType }) {
+  const { role } = useAuth();
+  if (role !== "admin") return <Redirect to="/" />;
+  return <Component />;
+}
+
 function Router() {
+  const { role } = useAuth();
   return (
     <Layout>
       <Switch>
         <Route path="/" component={LiveBoard} />
-        <Route path="/personnel" component={PersonnelManagement} />
-        <Route path="/duty-points" component={DutyPointsManagement} />
         <Route path="/roster" component={RosterHistory} />
-        <Route path="/assign" component={AssignDuty} />
         <Route path="/handover" component={HandoverReport} />
         <Route path="/muster" component={MusterRoll} />
         <Route path="/transfer" component={TransferReceipt} />
         <Route path="/leave" component={LeaveManagement} />
         <Route path="/attendance" component={AttendanceSummary} />
         <Route path="/biometric" component={BiometricAttendance} />
+
+        {/* Admin-only routes */}
+        <Route path="/assign">
+          {role === "admin" ? <AssignDuty /> : <Redirect to="/" />}
+        </Route>
+        <Route path="/personnel">
+          {role === "admin" ? <PersonnelManagement /> : <Redirect to="/" />}
+        </Route>
+        <Route path="/duty-points">
+          {role === "admin" ? <DutyPointsManagement /> : <Redirect to="/" />}
+        </Route>
+
         <Route component={NotFound} />
       </Switch>
     </Layout>

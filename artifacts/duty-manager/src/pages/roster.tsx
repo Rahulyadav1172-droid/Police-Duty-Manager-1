@@ -10,6 +10,7 @@ import {
   useReleaseFromDuty,
   RosterEntryStatus,
 } from "@workspace/api-client-react";
+import { useAuth } from "@/hooks/use-auth";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,9 @@ export default function RosterHistory() {
   const [toDate, setToDate]           = useState(today);
 
   const { data: roster, isLoading } = useListRoster();
+
+  const { role } = useAuth();
+  const isAdmin = role === "admin";
 
   const releaseMutation = useReleaseFromDuty({
     mutation: {
@@ -254,7 +258,7 @@ export default function RosterHistory() {
                       : <span className="text-muted-foreground italic text-xs">Until released</span>}
                   </TableCell>
                   <TableCell className="text-right">
-                    {entry.status === RosterEntryStatus.active && (
+                    {isAdmin && entry.status === RosterEntryStatus.active && (
                       <Button
                         variant="outline"
                         size="sm"
