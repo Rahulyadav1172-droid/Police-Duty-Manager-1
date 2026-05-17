@@ -107,7 +107,7 @@ export default function LoginPage() {
             <ShieldCheck className={`w-6 h-6 ${isAdmin ? "text-blue-400" : "text-white/40"}`} />
             <div className="text-center">
               <p className="text-xs font-bold uppercase tracking-wide">गणना कार्यालय</p>
-              <p className="text-[10px] text-white/50 mt-0.5">ADMIN</p>
+              <p className="text-[10px] text-white/50 mt-0.5">LOG IN</p>
             </div>
           </button>
 
@@ -123,7 +123,7 @@ export default function LoginPage() {
             <Cpu className={`w-6 h-6 ${!isAdmin ? "text-emerald-400" : "text-white/40"}`} />
             <div className="text-center">
               <p className="text-xs font-bold uppercase tracking-wide">Smart Cell</p>
-              <p className="text-[10px] text-white/50 mt-0.5">MESS MODULE</p>
+              <p className="text-[10px] text-white/50 mt-0.5">Admin</p>
             </div>
           </button>
         </div>
@@ -213,7 +213,6 @@ export default function LoginPage() {
           Ayodhya Police Line · Internal Portal · {new Date().getFullYear()}
         </p>
       </div>
-
       {/* Change Password Dialog */}
       <Dialog open={resetOpen} onOpenChange={setResetOpen}>
         <DialogContent className="max-w-sm">
