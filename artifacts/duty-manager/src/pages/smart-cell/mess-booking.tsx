@@ -14,8 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
 const ROOMS = ["Suite - 1", "Suite - 2", "Suite - 3", "Suite - 4"] as const;
 const STORAGE_KEY = "apl_mess_bookings";
@@ -80,135 +78,148 @@ function fmtTime(t: string) {
   return `${hh}:${String(m).padStart(2, "0")} ${ampm}`;
 }
 
-function generatePDF(b: Booking) {
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
-  const pw = doc.internal.pageSize.getWidth();
+function fmtDateHindi(iso: string) {
+  try {
+    const d = parseISO(iso);
+    return format(d, "dd.MM.yyyy");
+  } catch { return iso; }
+}
 
-  doc.setFillColor(15, 40, 90);
-  doc.rect(0, 0, pw, 28, "F");
+function printLetter(b: Booking) {
+  const bookingDateStr = fmtDateHindi(b.createdAt.split("T")[0]);
+  const checkInStr    = fmtDateHindi(b.checkInDate);
+  const checkOutStr   = fmtDateHindi(b.checkOutDate);
+  const checkInTimeStr  = fmtTime(b.checkInTime);
+  const checkOutTimeStr = fmtTime(b.checkOutTime);
+  const foodLine = b.foodApplicable === "yes" ? "Applicable" : "Not Applicable";
 
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.text("AYODHYA POLICE LINE", pw / 2, 10, { align: "center" });
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text("Uttar Pradesh Police  |  Officer's Mess", pw / 2, 17, { align: "center" });
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
-  doc.text("ROOM BOOKING CONFIRMATION LETTER", pw / 2, 24, { align: "center" });
+  const html = `<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8"/>
+<title>Mess Booking - ${b.refNo}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap"/>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans Devanagari', Arial, sans-serif;
+    font-size: 13pt;
+    line-height: 1.9;
+    color: #111;
+    background: #fff;
+    padding: 30mm 25mm 20mm 30mm;
+  }
+  .header-bar {
+    background: #0f2859;
+    color: #fff;
+    text-align: center;
+    padding: 10px 16px;
+    margin-bottom: 18px;
+    border-radius: 3px;
+  }
+  .header-bar h1 { font-size: 15pt; font-weight: 700; letter-spacing: 1px; }
+  .header-bar p  { font-size: 10pt; margin-top: 2px; opacity: .85; }
+  .ref-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11pt;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  .to-block { margin-bottom: 16px; }
+  .to-block .label { font-size: 12pt; }
+  .to-block .name  { font-weight: 700; font-size: 13pt; }
+  .subject-block { margin-bottom: 16px; }
+  .subject-block .subj-label { font-weight: 700; display: inline; }
+  .body-para { text-indent: 2em; margin-bottom: 16px; text-align: justify; }
+  .booking-header { font-weight: 700; margin-bottom: 6px; }
+  .booking-list { list-style: none; padding-left: 10px; margin-bottom: 16px; }
+  .booking-list li { padding: 2px 0; }
+  .booking-list li::before { content: "·  "; font-weight: bold; }
+  .contact-line { margin-bottom: 12px; }
+  .welcome-line  { margin-bottom: 20px; }
+  .sign-block { text-align: right; margin-top: 10px; margin-bottom: 22px; line-height: 1.7; }
+  .sign-block .cmd { font-weight: 700; }
+  .copy-block { border-top: 1px solid #555; padding-top: 10px; font-size: 11pt; }
+  @media print {
+    body { padding: 15mm 18mm 12mm 22mm; }
+    .no-print { display: none !important; }
+    @page { size: A4; margin: 0; }
+  }
+</style>
+</head>
+<body>
 
-  doc.setTextColor(30, 30, 30);
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Ref. No.: ${b.refNo}`, 14, 36);
-  doc.text(`Date: ${fmtDate(b.createdAt.split("T")[0])}`, pw - 14, 36, { align: "right" });
+<div class="header-bar">
+  <h1>पुलिस ऑफिसर्स गेस्ट हाउस — अयोध्या पुलिस लाइन</h1>
+  <p>उत्तर प्रदेश पुलिस &nbsp;|&nbsp; Ayodhya Police Line, Uttar Pradesh</p>
+</div>
 
-  doc.setFontSize(10);
-  doc.text("To,", 14, 46);
-  doc.setFont("helvetica", "bold");
-  doc.text(b.guestName, 14, 52);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Mobile: ${b.mobile}`, 14, 58);
+<div class="ref-row">
+  <span>सं0 / Ref. No.: <strong>${b.refNo}</strong></span>
+  <span>दिनांक / Date: <strong>${bookingDateStr}</strong></span>
+</div>
 
-  doc.setFont("helvetica", "bold");
-  doc.text("Subject:", 14, 68);
-  doc.setFont("helvetica", "normal");
-  doc.text(
-    `Confirmation of room booking at Officer's Mess, Ayodhya Police Line.`,
-    14, 74,
-  );
+<div class="to-block">
+  <div class="label">सेवा में,</div>
+  <div class="name">&nbsp;&nbsp;श्री ${b.guestName}</div>
+  <div>&nbsp;&nbsp;मो0नं0- +91 ${b.mobile}</div>
+</div>
 
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.text(
-    "With reference to the above subject, it is hereby confirmed that the following room has been reserved for your stay:",
-    14, 82, { maxWidth: pw - 28 },
-  );
+<div class="subject-block">
+  <span class="subj-label">विषयः</span>&nbsp;&nbsp;
+  पुलिस आफिसर्स गेस्ट हाउस में सूट आरक्षित किये जाने की पुष्टि के संबंध में ।
+</div>
 
-  autoTable(doc, {
-    startY: 90,
-    head: [["BOOKING DETAILS", ""]],
-    body: [
-      ["Room Allotted", b.room],
-      ["Check-in Date", fmtDate(b.checkInDate)],
-      ["Check-in Time", fmtTime(b.checkInTime)],
-      ["Check-out Date", fmtDate(b.checkOutDate)],
-      ["Check-out Time", fmtTime(b.checkOutTime)],
-      ["Total Duration of Stay", `${b.totalDays} Day(s)`],
-    ],
-    theme: "grid",
-    headStyles: { fillColor: [15, 40, 90], fontSize: 9, fontStyle: "bold" },
-    bodyStyles: { fontSize: 9 },
-    columnStyles: { 0: { fontStyle: "bold", cellWidth: 65 } },
-    margin: { left: 14, right: 14 },
-  });
+<div class="body-para">
+  महोदय,<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;अवगत कराना है कि पुलिस ऑफिसर्स गेस्ट हाउस में दिनांक <strong>${bookingDateStr}</strong> को आपके प्रवास हेतु <strong>01 रूम</strong> आरक्षित कर दिया गया है, जिसका विवरण निम्नवत हैः-
+</div>
 
-  const afterBooking = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 6;
+<div class="booking-header">बुकिंग विवरणः</div>
+<ul class="booking-list">
+  <li>गेस्ट का नामः &nbsp;श्री ${b.guestName}</li>
+  <li>कब से कब तकः &nbsp;दि0 ${checkInStr} से दि0 ${checkOutStr}</li>
+  <li>रूम की संख्याः &nbsp;01</li>
+  <li>सूट नम्बरः &nbsp;${b.room}</li>
+  <li>चेक-इन / चेक-आउट की तिथि: &nbsp;${checkInStr} ${checkInTimeStr} &nbsp;/&nbsp; ${checkOutStr} ${checkOutTimeStr}</li>
+  <li>कुल दिनः &nbsp;${b.totalDays}</li>
+  <li>प्रति रूम प्रति दिन किरायाः &nbsp;₹${b.rentPerDay.toLocaleString("en-IN")}/-</li>
+  <li>फूड चार्जः &nbsp;${foodLine}${b.foodApplicable === "yes" && b.foodCharge ? `  (₹${b.foodCharge.toLocaleString("en-IN")}/-)` : ""}</li>
+</ul>
 
-  autoTable(doc, {
-    startY: afterBooking,
-    head: [["CHARGES", ""]],
-    body: [
-      ["Room Rent per Day", `Rs. ${b.rentPerDay.toLocaleString("en-IN")}/-`],
-      [
-        `Total Room Charges (${b.totalDays} day${b.totalDays !== 1 ? "s" : ""} × Rs. ${b.rentPerDay.toLocaleString("en-IN")})`,
-        `Rs. ${b.totalRoomCharge.toLocaleString("en-IN")}/-`,
-      ],
-      ["Food Charges", b.foodApplicable === "yes" ? "Applicable" : "Not Applicable"],
-      ...(b.foodApplicable === "yes" && b.foodCharge
-        ? [["Food Charge Amount", `Rs. ${b.foodCharge.toLocaleString("en-IN")}/-`]]
-        : []),
-    ],
-    theme: "grid",
-    headStyles: { fillColor: [15, 40, 90], fontSize: 9, fontStyle: "bold" },
-    bodyStyles: { fontSize: 9 },
-    columnStyles: { 0: { fontStyle: "bold", cellWidth: 110 } },
-    margin: { left: 14, right: 14 },
-  });
+<div class="contact-line">
+  <strong>सम्पर्क सूत्र ऑफिसर्स गेस्ट हाउस</strong>- उ0नि0 यदुनाथ &nbsp; मो0न0-8317041684
+</div>
 
-  const afterCharges = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8;
+<div class="welcome-line">
+  हम आपके स्वागत के लिए उत्सुक हैं और आशा करते हैं कि आपका प्रवास सुखद रहेगा ।
+</div>
 
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "bold");
-  doc.text("TERMS & CONDITIONS:", 14, afterCharges);
-  doc.setFont("helvetica", "normal");
-  const terms = [
-    "1. Booking is subject to availability and official approval.",
-    "2. Please carry a valid identity card (service ID) at the time of check-in.",
-    "3. Check-in and check-out times are as mentioned above. Late check-out may attract additional charges.",
-    "4. The management reserves the right to cancel the booking in case of any official emergency.",
-    "5. Guests are requested to maintain the decorum of the mess premises.",
-  ];
-  let ty = afterCharges + 6;
-  terms.forEach((t) => {
-    doc.text(t, 14, ty, { maxWidth: pw - 28 });
-    ty += 6;
-  });
+<div class="sign-block">
+  <div>आज्ञा से</div>
+  <div class="cmd">वरिष्ठ पुलिस अधीक्षक</div>
+  <div>अयोध्या</div>
+</div>
 
-  const sigY = ty + 12;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.text("(Authorised Signatory)", pw - 14, sigY, { align: "right" });
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text("Officer Commanding", pw - 14, sigY + 6, { align: "right" });
-  doc.text("Ayodhya Police Line", pw - 14, sigY + 12, { align: "right" });
-  doc.text("Uttar Pradesh Police", pw - 14, sigY + 18, { align: "right" });
+<div class="copy-block">
+  <strong>प्रतिलिपिः</strong> प्रभारी पुलिस ऑफिसर्स गेस्ट हाउस, पुलिस लाइन, अयोध्या संबंधित से समन्वय स्थापित करते हुए आवश्यक कार्यवाही करें ।
+</div>
 
-  doc.setDrawColor(15, 40, 90);
-  doc.setLineWidth(0.5);
-  doc.line(14, sigY - 2, pw - 14, sigY - 2);
+<script>
+  window.onload = function() {
+    setTimeout(function() { window.print(); }, 800);
+  };
+</script>
+</body>
+</html>`;
 
-  doc.setFontSize(7);
-  doc.setTextColor(150, 150, 150);
-  doc.text(
-    `Generated on ${format(new Date(), "dd MMM yyyy, hh:mm a")}  |  Booking Ref: ${b.refNo}`,
-    pw / 2, doc.internal.pageSize.getHeight() - 8,
-    { align: "center" },
-  );
-
-  doc.save(`Mess_Booking_${b.refNo.replace(/\//g, "-")}.pdf`);
+  const win = window.open("", "_blank", "width=900,height=700");
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+  }
 }
 
 export default function MessBooking() {
@@ -254,7 +265,7 @@ export default function MessBooking() {
     saveBookings(updated);
     setBookings(updated);
     toast({ title: "Booking confirmed", description: `Ref: ${newBooking.refNo}` });
-    generatePDF(newBooking);
+    printLetter(newBooking);
     reset();
     setFormOpen(false);
   }
@@ -346,7 +357,7 @@ export default function MessBooking() {
                   <div className="flex items-center gap-2 shrink-0">
                     <Badge variant="outline" className="text-xs font-mono">{b.refNo}</Badge>
                     <button
-                      onClick={() => generatePDF(b)}
+                      onClick={() => printLetter(b)}
                       className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
                       title="Download PDF"
                     >
