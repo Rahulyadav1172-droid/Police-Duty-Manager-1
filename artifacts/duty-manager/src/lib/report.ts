@@ -1,76 +1,15 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
+import { UP_POLICE_LOGO_B64 } from "./up-police-logo";
 
 /**
- * Draws the Uttar Pradesh Police circular emblem using vector primitives.
- * cx/cy = centre in mm, r = outer radius in mm.
+ * Places the official UP Police logo image centred at (cx, cy) with diameter 2r (mm).
+ * The logo PNG has a white background so it composites cleanly on any header colour.
  */
 function drawUPPoliceEmblem(doc: jsPDF, cx: number, cy: number, r: number): void {
-  const NAVY   = [13,  27,  62]  as [number, number, number];
-  const GOLD   = [180, 140, 40]  as [number, number, number];
-  const WHITE  = [255, 255, 255] as [number, number, number];
-  const SAFFRON= [219, 100,  18] as [number, number, number];
-
-  // 1. Outer navy disc
-  doc.setFillColor(...NAVY);
-  doc.circle(cx, cy, r, "F");
-
-  // 2. Thin saffron outer ring
-  doc.setDrawColor(...SAFFRON);
-  doc.setLineWidth(r * 0.07);
-  doc.circle(cx, cy, r * 0.92, "S");
-
-  // 3. Gold decorative ring
-  doc.setDrawColor(...GOLD);
-  doc.setLineWidth(r * 0.06);
-  doc.circle(cx, cy, r * 0.82, "S");
-
-  // 4. White inner disc
-  doc.setFillColor(...WHITE);
-  doc.circle(cx, cy, r * 0.70, "F");
-
-  // 5. Navy Ashoka-wheel disc (inner)
-  doc.setFillColor(...NAVY);
-  doc.circle(cx, cy, r * 0.45, "F");
-
-  // 6. Eight white spokes
-  doc.setDrawColor(...WHITE);
-  doc.setLineWidth(r * 0.05);
-  for (let i = 0; i < 8; i++) {
-    const a = (i / 8) * Math.PI * 2;
-    doc.line(
-      cx + Math.cos(a) * r * 0.14, cy + Math.sin(a) * r * 0.14,
-      cx + Math.cos(a) * r * 0.43, cy + Math.sin(a) * r * 0.43,
-    );
-  }
-
-  // 7. Gold hub dot
-  doc.setFillColor(...GOLD);
-  doc.circle(cx, cy, r * 0.12, "F");
-
-  // 8. Text in white band — "UTTAR PRADESH" top, "POLICE" bottom
-  const fSz = Math.max(3.2, r * 0.38);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(fSz);
-  doc.setTextColor(...NAVY);
-  doc.text("UTTAR PRADESH", cx, cy - r * 0.515, { align: "center" });
-  doc.text("POLICE", cx, cy + r * 0.63, { align: "center" });
-
-  // 9. 12 gold dots on the inner gold ring
-  doc.setFillColor(...GOLD);
-  for (let i = 0; i < 12; i++) {
-    const a = (i / 12) * Math.PI * 2 - Math.PI / 2;
-    doc.circle(
-      cx + Math.cos(a) * r * 0.82,
-      cy + Math.sin(a) * r * 0.82,
-      r * 0.038, "F",
-    );
-  }
-
-  // 10. Reset drawing state
-  doc.setLineWidth(0.3);
-  doc.setDrawColor(0, 0, 0);
+  const size = r * 2;
+  doc.addImage(UP_POLICE_LOGO_B64, "PNG", cx - r, cy - r, size, size);
 }
 
 type RosterEntry = {
