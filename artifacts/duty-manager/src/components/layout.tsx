@@ -1,4 +1,4 @@
-import { ShieldAlert, Users, MapPin, ListOrdered, CalendarCheck, Search, ArrowLeftRight, ClipboardList, PackageOpen, CalendarOff, LogOut, KeyRound, BarChart3 } from "lucide-react";
+import { ShieldAlert, Users, MapPin, ListOrdered, CalendarCheck, Search, ArrowLeftRight, ClipboardList, PackageOpen, CalendarOff, LogOut, KeyRound, BarChart3, Fingerprint } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
@@ -30,6 +30,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { name: "Transfer Receipt", href: "/transfer",   icon: PackageOpen },
     { name: "Leave Register",   href: "/leave",      icon: CalendarOff },
     { name: "Attendance",       href: "/attendance", icon: BarChart3 },
+    { name: "Biometric",        href: "/biometric",  icon: Fingerprint },
     { name: "Personnel",        href: "/personnel",  icon: Users },
     { name: "Duty Points",      href: "/duty-points",icon: MapPin },
   ];

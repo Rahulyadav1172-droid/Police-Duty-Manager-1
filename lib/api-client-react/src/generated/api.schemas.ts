@@ -223,6 +223,61 @@ export interface LeaveRecord {
   personnel?: Personnel;
 }
 
+export type BiometricPunchInputPunchType = typeof BiometricPunchInputPunchType[keyof typeof BiometricPunchInputPunchType];
+
+
+export const BiometricPunchInputPunchType = {
+  IN: 'IN',
+  OUT: 'OUT',
+} as const;
+
+export interface BiometricPunchInput {
+  /**
+     * Belt number (PNO) of the personnel as registered in the machine
+     * @minLength 1
+     */
+  beltNumber: string;
+  punchType: BiometricPunchInputPunchType;
+  /** Timestamp from the machine; defaults to current server time if omitted */
+  punchTime?: string;
+  /** Optional identifier of the biometric device */
+  deviceId?: string;
+}
+
+export type BiometricRecordPunchType = typeof BiometricRecordPunchType[keyof typeof BiometricRecordPunchType];
+
+
+export const BiometricRecordPunchType = {
+  IN: 'IN',
+  OUT: 'OUT',
+} as const;
+
+export interface BiometricRecord {
+  id: number;
+  personnelId: number;
+  punchTime: string;
+  punchType: BiometricRecordPunchType;
+  /** @nullable */
+  deviceId?: string | null;
+  createdAt: string;
+  personnel?: Personnel;
+}
+
+export interface BiometricDailySummary {
+  personnelId: number;
+  personnel: Personnel;
+  /** @nullable */
+  firstIn?: string | null;
+  /** @nullable */
+  lastOut?: string | null;
+  /**
+     * Total hours between first IN and last OUT
+     * @nullable
+     */
+  hoursWorked?: number | null;
+  punches: BiometricRecord[];
+}
+
 export type LeaveInputLeaveType = typeof LeaveInputLeaveType[keyof typeof LeaveInputLeaveType];
 
 
@@ -264,4 +319,12 @@ export const ListLeaveStatus = {
   approved: 'approved',
   rejected: 'rejected',
 } as const;
+
+export type ListBiometricRecordsParams = {
+/**
+ * Filter by date (YYYY-MM-DD). Defaults to today.
+ */
+date?: string;
+personnelId?: number;
+};
 

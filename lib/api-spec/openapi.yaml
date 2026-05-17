@@ -18,6 +18,8 @@ tags:
     description: Duty roster/assignment management
   - name: leave
     description: Personnel leave and absence management
+  - name: biometric
+    description: Biometric machine attendance records
 paths:
   /healthz:
     get:
@@ -394,6 +396,86 @@ paths:
                 items:
                   $ref: "#/components/schemas/LeaveRecord"
 
+  /biometric/punch:
+    post:
+      operationId: recordBiometricPunch
+      tags: [biometric]
+      summary: Record a biometric punch (IN or OUT) by belt number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BiometricPunchInput"
+      responses:
+        "201":
+          description: Punch recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BiometricRecord"
+        "400":
+          description: Invalid input or belt number not found
+
+  /biometric/records:
+    get:
+      operationId: listBiometricRecords
+      tags: [biometric]
+      summary: List biometric punch records (optionally filtered by date)
+      parameters:
+        - name: date
+          in: query
+          required: false
+          description: "Filter by date (YYYY-MM-DD). Defaults to today."
+          schema:
+            type: string
+        - name: personnelId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of biometric punch records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BiometricRecord"
+
+  /biometric/today:
+    get:
+      operationId: getBiometricToday
+      tags: [biometric]
+      summary: Get today's biometric summary per personnel (first IN, last OUT, hours worked)
+      responses:
+        "200":
+          description: Today's attendance summary from biometric machine
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BiometricDailySummary"
+
+  /biometric/records/{id}:
+    delete:
+      operationId: deleteBiometricRecord
+      tags: [biometric]
+      summary: Delete a biometric punch record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
   /leave/{id}:
     get:
       operationId: getLeave
@@ -707,6 +789,69 @@ components:
           format: date-time
         personnel:
           $ref: "#/components/schemas/Personnel"
+
+    BiometricPunchInput:
+      type: object
+      required: [beltNumber, punchType]
+      properties:
+        beltNumber:
+          type: string
+          minLength: 1
+          description: Belt number (PNO) of the personnel as registered in the machine
+        punchType:
+          type: string
+          enum: [IN, OUT]
+        punchTime:
+          type: string
+          format: date-time
+          description: Timestamp from the machine; defaults to current server time if omitted
+        deviceId:
+          type: string
+          description: Optional identifier of the biometric device
+
+    BiometricRecord:
+      type: object
+      required: [id, personnelId, punchTime, punchType, createdAt]
+      properties:
+        id:
+          type: integer
+        personnelId:
+          type: integer
+        punchTime:
+          type: string
+          format: date-time
+        punchType:
+          type: string
+          enum: [IN, OUT]
+        deviceId:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        personnel:
+          $ref: "#/components/schemas/Personnel"
+
+    BiometricDailySummary:
+      type: object
+      required: [personnelId, personnel, punches]
+      properties:
+        personnelId:
+          type: integer
+        personnel:
+          $ref: "#/components/schemas/Personnel"
+        firstIn:
+          type: ["string", "null"]
+          format: date-time
+        lastOut:
+          type: ["string", "null"]
+          format: date-time
+        hoursWorked:
+          type: ["number", "null"]
+          description: Total hours between first IN and last OUT
+        punches:
+          type: array
+          items:
+            $ref: "#/components/schemas/BiometricRecord"
 
     LeaveInput:
       type: object

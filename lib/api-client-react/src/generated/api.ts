@@ -20,12 +20,16 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  BiometricDailySummary,
+  BiometricPunchInput,
+  BiometricRecord,
   DutyPoint,
   DutyPointInput,
   DutyPointUpdate,
   HealthStatus,
   LeaveInput,
   LeaveRecord,
+  ListBiometricRecordsParams,
   ListLeaveParams,
   LiveBoard,
   Personnel,
@@ -1536,6 +1540,308 @@ export function useGetActiveLeavesToday<TData = Awaited<ReturnType<typeof getAct
 
 
 
+
+export const getRecordBiometricPunchUrl = () => {
+
+
+
+
+  return `/api/biometric/punch`
+}
+
+/**
+ * @summary Record a biometric punch (IN or OUT) by belt number
+ */
+export const recordBiometricPunch = async (biometricPunchInput: BiometricPunchInput, options?: RequestInit): Promise<BiometricRecord> => {
+
+  return customFetch<BiometricRecord>(getRecordBiometricPunchUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      biometricPunchInput,)
+  }
+);}
+
+
+
+
+export const getRecordBiometricPunchMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordBiometricPunch>>, TError,{data: BodyType<BiometricPunchInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recordBiometricPunch>>, TError,{data: BodyType<BiometricPunchInput>}, TContext> => {
+
+const mutationKey = ['recordBiometricPunch'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordBiometricPunch>>, {data: BodyType<BiometricPunchInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  recordBiometricPunch(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordBiometricPunchMutationResult = NonNullable<Awaited<ReturnType<typeof recordBiometricPunch>>>
+    export type RecordBiometricPunchMutationBody = BodyType<BiometricPunchInput>
+    export type RecordBiometricPunchMutationError = ErrorType<void>
+
+    /**
+ * @summary Record a biometric punch (IN or OUT) by belt number
+ */
+export const useRecordBiometricPunch = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordBiometricPunch>>, TError,{data: BodyType<BiometricPunchInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof recordBiometricPunch>>,
+        TError,
+        {data: BodyType<BiometricPunchInput>},
+        TContext
+      > => {
+      return useMutation(getRecordBiometricPunchMutationOptions(options));
+    }
+
+export const getListBiometricRecordsUrl = (params?: ListBiometricRecordsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/biometric/records?${stringifiedParams}` : `/api/biometric/records`
+}
+
+/**
+ * @summary List biometric punch records (optionally filtered by date)
+ */
+export const listBiometricRecords = async (params?: ListBiometricRecordsParams, options?: RequestInit): Promise<BiometricRecord[]> => {
+
+  return customFetch<BiometricRecord[]>(getListBiometricRecordsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListBiometricRecordsQueryKey = (params?: ListBiometricRecordsParams,) => {
+    return [
+    `/api/biometric/records`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListBiometricRecordsQueryOptions = <TData = Awaited<ReturnType<typeof listBiometricRecords>>, TError = ErrorType<unknown>>(params?: ListBiometricRecordsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listBiometricRecords>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListBiometricRecordsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listBiometricRecords>>> = ({ signal }) => listBiometricRecords(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listBiometricRecords>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListBiometricRecordsQueryResult = NonNullable<Awaited<ReturnType<typeof listBiometricRecords>>>
+export type ListBiometricRecordsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List biometric punch records (optionally filtered by date)
+ */
+
+export function useListBiometricRecords<TData = Awaited<ReturnType<typeof listBiometricRecords>>, TError = ErrorType<unknown>>(
+ params?: ListBiometricRecordsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listBiometricRecords>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListBiometricRecordsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetBiometricTodayUrl = () => {
+
+
+
+
+  return `/api/biometric/today`
+}
+
+/**
+ * @summary Get today's biometric summary per personnel (first IN, last OUT, hours worked)
+ */
+export const getBiometricToday = async ( options?: RequestInit): Promise<BiometricDailySummary[]> => {
+
+  return customFetch<BiometricDailySummary[]>(getGetBiometricTodayUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetBiometricTodayQueryKey = () => {
+    return [
+    `/api/biometric/today`
+    ] as const;
+    }
+
+
+export const getGetBiometricTodayQueryOptions = <TData = Awaited<ReturnType<typeof getBiometricToday>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBiometricToday>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBiometricTodayQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBiometricToday>>> = ({ signal }) => getBiometricToday({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBiometricToday>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetBiometricTodayQueryResult = NonNullable<Awaited<ReturnType<typeof getBiometricToday>>>
+export type GetBiometricTodayQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get today's biometric summary per personnel (first IN, last OUT, hours worked)
+ */
+
+export function useGetBiometricToday<TData = Awaited<ReturnType<typeof getBiometricToday>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBiometricToday>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetBiometricTodayQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getDeleteBiometricRecordUrl = (id: number,) => {
+
+
+
+
+  return `/api/biometric/records/${id}`
+}
+
+/**
+ * @summary Delete a biometric punch record
+ */
+export const deleteBiometricRecord = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteBiometricRecordUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteBiometricRecordMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBiometricRecord>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteBiometricRecord>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteBiometricRecord'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteBiometricRecord>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteBiometricRecord(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteBiometricRecordMutationResult = NonNullable<Awaited<ReturnType<typeof deleteBiometricRecord>>>
+
+    export type DeleteBiometricRecordMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a biometric punch record
+ */
+export const useDeleteBiometricRecord = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBiometricRecord>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteBiometricRecord>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteBiometricRecordMutationOptions(options));
+    }
 
 export const getGetLeaveUrl = (id: number,) => {
 

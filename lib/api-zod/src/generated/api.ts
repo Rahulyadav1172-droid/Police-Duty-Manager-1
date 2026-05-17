@@ -451,6 +451,91 @@ export const GetActiveLeavesTodayResponse = zod.array(GetActiveLeavesTodayRespon
 
 
 /**
+ * @summary Record a biometric punch (IN or OUT) by belt number
+ */
+
+
+
+export const RecordBiometricPunchBody = zod.object({
+  "beltNumber": zod.string().min(1).describe('Belt number (PNO) of the personnel as registered in the machine'),
+  "punchType": zod.enum(['IN', 'OUT']),
+  "punchTime": zod.coerce.date().optional().describe('Timestamp from the machine; defaults to current server time if omitted'),
+  "deviceId": zod.string().optional().describe('Optional identifier of the biometric device')
+})
+
+
+/**
+ * @summary List biometric punch records (optionally filtered by date)
+ */
+export const ListBiometricRecordsQueryParams = zod.object({
+  "date": zod.coerce.string().optional().describe('Filter by date (YYYY-MM-DD). Defaults to today.'),
+  "personnelId": zod.coerce.number().optional()
+})
+
+export const ListBiometricRecordsResponseItem = zod.object({
+  "id": zod.number(),
+  "personnelId": zod.number(),
+  "punchTime": zod.coerce.date(),
+  "punchType": zod.enum(['IN', 'OUT']),
+  "deviceId": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "personnel": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "beltNumber": zod.string(),
+  "mobileNumber": zod.string(),
+  "rank": zod.enum(['Constable', 'Head Constable', 'Sub-Inspector', 'Inspector']),
+  "createdAt": zod.coerce.date()
+}).optional()
+})
+export const ListBiometricRecordsResponse = zod.array(ListBiometricRecordsResponseItem)
+
+
+/**
+ * @summary Get today's biometric summary per personnel (first IN, last OUT, hours worked)
+ */
+export const GetBiometricTodayResponseItem = zod.object({
+  "personnelId": zod.number(),
+  "personnel": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "beltNumber": zod.string(),
+  "mobileNumber": zod.string(),
+  "rank": zod.enum(['Constable', 'Head Constable', 'Sub-Inspector', 'Inspector']),
+  "createdAt": zod.coerce.date()
+}),
+  "firstIn": zod.coerce.date().nullish(),
+  "lastOut": zod.coerce.date().nullish(),
+  "hoursWorked": zod.number().nullish().describe('Total hours between first IN and last OUT'),
+  "punches": zod.array(zod.object({
+  "id": zod.number(),
+  "personnelId": zod.number(),
+  "punchTime": zod.coerce.date(),
+  "punchType": zod.enum(['IN', 'OUT']),
+  "deviceId": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "personnel": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "beltNumber": zod.string(),
+  "mobileNumber": zod.string(),
+  "rank": zod.enum(['Constable', 'Head Constable', 'Sub-Inspector', 'Inspector']),
+  "createdAt": zod.coerce.date()
+}).optional()
+}))
+})
+export const GetBiometricTodayResponse = zod.array(GetBiometricTodayResponseItem)
+
+
+/**
+ * @summary Delete a biometric punch record
+ */
+export const DeleteBiometricRecordParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
  * @summary Get a single leave record
  */
 export const GetLeaveParams = zod.object({

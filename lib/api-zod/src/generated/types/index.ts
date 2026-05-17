@@ -6,6 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './biometricDailySummary';
+export * from './biometricPunchInput';
+export * from './biometricPunchInputPunchType';
+export * from './biometricRecord';
+export * from './biometricRecordPunchType';
 export * from './dutyPoint';
 export * from './dutyPointInput';
 export * from './dutyPointUpdate';
@@ -16,6 +21,7 @@ export * from './leaveInputStatus';
 export * from './leaveRecord';
 export * from './leaveRecordLeaveType';
 export * from './leaveRecordStatus';
+export * from './listBiometricRecordsParams';
 export * from './listLeaveParams';
 export * from './listLeaveStatus';
 export * from './liveBoard';
