@@ -1,23 +1,23 @@
 import { useState, useCallback, useEffect, createContext, useContext } from "react";
 
-const DEFAULT_ADMIN_PASSWORD   = "police@123";
-const DEFAULT_OFFICER_PASSWORD = "officer@123";
-const ADMIN_PASSWORD_KEY       = "apl_password";
-const OFFICER_PASSWORD_KEY     = "apl_officer_password";
-const AUTH_KEY                 = "apl_authenticated";
-const ROLE_KEY                 = "apl_role";
-const LAST_ACTIVITY_KEY        = "apl_last_activity";
-const SESSION_EXPIRED_KEY      = "apl_session_expired";
+const DEFAULT_ADMIN_PASSWORD      = "police@123";
+const DEFAULT_SMART_CELL_PASSWORD = "smartcell@123";
+const ADMIN_PASSWORD_KEY          = "apl_password";
+const SMART_CELL_PASSWORD_KEY     = "apl_smartcell_password";
+const AUTH_KEY                    = "apl_authenticated";
+const ROLE_KEY                    = "apl_role";
+const LAST_ACTIVITY_KEY           = "apl_last_activity";
+const SESSION_EXPIRED_KEY         = "apl_session_expired";
 
 const INACTIVITY_TIMEOUT_MS = 60 * 60 * 1000;
 const CHECK_INTERVAL_MS     = 60 * 1000;
 
 const ACTIVITY_EVENTS = ["mousemove", "mousedown", "keydown", "touchstart", "scroll", "click"] as const;
 
-export type UserRole = "admin" | "officer";
+export type UserRole = "admin" | "smart-cell";
 
-export const FIXED_USERNAME   = "Ayodhya Police Line";
-export const OFFICER_USERNAME = "Senior Officer";
+export const FIXED_USERNAME      = "Ayodhya Police Line";
+export const SMART_CELL_USERNAME = "Smart Cell";
 
 export interface AuthContextValue {
   isAuthenticated: boolean;
@@ -42,7 +42,7 @@ export function useAuthState(): AuthContextValue {
 
   const [role, setRole] = useState<UserRole | null>(() => {
     const stored = localStorage.getItem(ROLE_KEY);
-    return stored === "admin" || stored === "officer" ? stored : null;
+    return stored === "admin" || stored === "smart-cell" ? stored : null;
   });
 
   const login = useCallback((password: string, loginRole: UserRole): boolean => {
@@ -50,7 +50,7 @@ export function useAuthState(): AuthContextValue {
       const stored = localStorage.getItem(ADMIN_PASSWORD_KEY) || DEFAULT_ADMIN_PASSWORD;
       if (password !== stored) return false;
     } else {
-      const stored = localStorage.getItem(OFFICER_PASSWORD_KEY) || DEFAULT_OFFICER_PASSWORD;
+      const stored = localStorage.getItem(SMART_CELL_PASSWORD_KEY) || DEFAULT_SMART_CELL_PASSWORD;
       if (password !== stored) return false;
     }
     localStorage.setItem(AUTH_KEY, "true");
@@ -74,9 +74,9 @@ export function useAuthState(): AuthContextValue {
   const changePassword = useCallback(
     (current: string, next: string, targetRole?: UserRole): { success: boolean; error?: string } => {
       const r = targetRole ?? role ?? "admin";
-      const key     = r === "admin" ? ADMIN_PASSWORD_KEY : OFFICER_PASSWORD_KEY;
-      const def     = r === "admin" ? DEFAULT_ADMIN_PASSWORD : DEFAULT_OFFICER_PASSWORD;
-      const stored  = localStorage.getItem(key) || def;
+      const key  = r === "admin" ? ADMIN_PASSWORD_KEY : SMART_CELL_PASSWORD_KEY;
+      const def  = r === "admin" ? DEFAULT_ADMIN_PASSWORD : DEFAULT_SMART_CELL_PASSWORD;
+      const stored = localStorage.getItem(key) || def;
       if (current !== stored) return { success: false, error: "Current password is incorrect" };
       if (next.length < 6) return { success: false, error: "New password must be at least 6 characters" };
       localStorage.setItem(key, next);

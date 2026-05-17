@@ -5,7 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { Layout } from "@/components/layout";
 import LoginPage from "@/pages/login";
-import { AuthContext, useAuthState } from "@/hooks/use-auth";
+import MessBooking from "@/pages/smart-cell/mess-booking";
+import { AuthContext, useAuthState, useAuth } from "@/hooks/use-auth";
 
 import LiveBoard from "@/pages/live-board";
 import PersonnelManagement from "@/pages/personnel";
@@ -47,6 +48,8 @@ function AdminRouter() {
 }
 
 function AppContent() {
+  const { role } = useAuth();
+  if (role === "smart-cell") return <MessBooking />;
   return <AdminRouter />;
 }
 
