@@ -166,7 +166,7 @@ export default function MusterRoll() {
       {/* Parade configuration */}
       <div className="bg-card border rounded-xl p-5 space-y-4">
         <h2 className="font-bold text-sm text-foreground flex items-center gap-2">
-          <AlignLeft className="w-4 h-4" /> Parade Configuration
+          <AlignLeft className="w-4 h-4" /> रात्रि गणना
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="space-y-1.5">
