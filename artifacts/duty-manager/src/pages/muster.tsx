@@ -183,7 +183,7 @@ export default function MusterRoll() {
 
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-              <MapPin className="w-3 h-3" /> Parade / Register Name
+              <MapPin className="w-3 h-3" /> रात्रि गणना / Register Name
             </Label>
             <Input
               value={paradeName}
