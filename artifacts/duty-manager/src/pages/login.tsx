@@ -187,12 +187,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {!isAdmin && (
-          <p className="text-center text-amber-400/60 text-xs mt-4">
-            Senior Officer access — view-only. Default password: <span className="font-mono">officer@123</span>
-          </p>
-        )}
-
         <p className="text-center text-white/20 text-xs mt-4">
           Ayodhya Police Line · Internal Portal · {new Date().getFullYear()}
         </p>
