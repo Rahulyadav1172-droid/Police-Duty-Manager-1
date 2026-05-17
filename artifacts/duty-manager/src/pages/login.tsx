@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Eye, EyeOff, Lock, RefreshCw, ShieldCheck, Star, Clock } from "lucide-react";
+import { Eye, EyeOff, Lock, RefreshCw, ShieldCheck, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth, SESSION_EXPIRED_KEY, type UserRole } from "@/hooks/use-auth";
+import { useAuth, SESSION_EXPIRED_KEY } from "@/hooks/use-auth";
 
 export default function LoginPage() {
   const { login, changePassword } = useAuth();
@@ -17,7 +17,6 @@ export default function LoginPage() {
   });
   const { toast } = useToast();
 
-  const [selectedRole, setSelectedRole] = useState<UserRole>("admin");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -30,18 +29,12 @@ export default function LoginPage() {
   const [showResetCurrent, setShowResetCurrent] = useState(false);
   const [showResetNew, setShowResetNew] = useState(false);
 
-  function handleRoleSwitch(role: UserRole) {
-    setSelectedRole(role);
-    setPassword("");
-    setError("");
-  }
-
   function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setIsLoading(true);
     setTimeout(() => {
-      const ok = login(password, selectedRole);
+      const ok = login(password, "admin");
       if (!ok) {
         setError("Incorrect password. Please try again.");
         setPassword("");
@@ -56,7 +49,7 @@ export default function LoginPage() {
       toast({ title: "Passwords do not match", variant: "destructive" });
       return;
     }
-    const result = changePassword(resetCurrent, resetNew, selectedRole);
+    const result = changePassword(resetCurrent, resetNew, "admin");
     if (result.success) {
       toast({ title: "Password changed successfully" });
       setResetOpen(false);
@@ -67,8 +60,6 @@ export default function LoginPage() {
       toast({ title: result.error ?? "Failed to change password", variant: "destructive" });
     }
   }
-
-  const isAdmin = selectedRole === "admin";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center p-4">
@@ -93,57 +84,21 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Role selector */}
-        <div className="grid grid-cols-2 gap-3 mb-5">
-          <button
-            type="button"
-            onClick={() => handleRoleSwitch("admin")}
-            className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-              isAdmin
-                ? "border-blue-500 bg-blue-600/20 text-white"
-                : "border-white/10 bg-white/5 text-white/50 hover:border-white/20 hover:text-white/70"
-            }`}
-          >
-            <ShieldCheck className={`w-6 h-6 ${isAdmin ? "text-blue-400" : "text-white/40"}`} />
-            <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-wide">गणना कार्यालय</p>
-              <p className="text-[10px] text-white/50 mt-0.5">LOG IN</p>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleRoleSwitch("officer")}
-            className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-              !isAdmin
-                ? "border-amber-500 bg-amber-600/20 text-white"
-                : "border-white/10 bg-white/5 text-white/50 hover:border-white/20 hover:text-white/70"
-            }`}
-          >
-            <Star className={`w-6 h-6 ${!isAdmin ? "text-amber-400" : "text-white/40"}`} />
-            <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-wide">Senior Officer</p>
-              <p className="text-[10px] text-white/50 mt-0.5">DASHBOARD</p>
-            </div>
-          </button>
-        </div>
-
         {/* Card */}
-        <div className={`backdrop-blur-sm border rounded-2xl p-8 shadow-2xl transition-colors ${
-          isAdmin
-            ? "bg-white/5 border-white/10"
-            : "bg-amber-950/20 border-amber-500/20"
-        }`}>
+        <div className="backdrop-blur-sm border border-white/10 bg-white/5 rounded-2xl p-8 shadow-2xl">
+
+          {/* Role badge */}
+          <div className="flex items-center justify-center gap-2 mb-7">
+            <ShieldCheck className="w-5 h-5 text-blue-400" />
+            <span className="text-blue-300 text-sm font-bold uppercase tracking-widest">गणना कार्यालय</span>
+          </div>
+
           {/* Username display */}
           <div className="mb-6">
-            <p className="text-xs font-semibold uppercase tracking-widest text-blue-300 mb-1.5">
-              {isAdmin ? "Username" : "Role"}
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-blue-300 mb-1.5">Username</p>
             <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-4 py-3">
               <Lock className="w-4 h-4 text-blue-400 shrink-0" />
-              <span className="text-white font-semibold text-sm">
-                {isAdmin ? "Ayodhya Police Line" : "Senior Officer"}
-              </span>
+              <span className="text-white font-semibold text-sm">Ayodhya Police Line</span>
             </div>
           </div>
 
@@ -180,11 +135,7 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className={`w-full font-semibold h-11 text-base shadow-lg ${
-                isAdmin
-                  ? "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/40"
-                  : "bg-amber-600 hover:bg-amber-500 text-white shadow-amber-900/40"
-              }`}
+              className="w-full font-semibold h-11 text-base shadow-lg bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/40"
               disabled={isLoading || !password}
             >
               {isLoading ? "Signing in…" : "Sign In"}
@@ -207,11 +158,12 @@ export default function LoginPage() {
           Ayodhya Police Line · Internal Portal · {new Date().getFullYear()}
         </p>
       </div>
+
       {/* Change Password Dialog */}
       <Dialog open={resetOpen} onOpenChange={setResetOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Change {isAdmin ? "Admin" : "Senior Officer"} Password</DialogTitle>
+            <DialogTitle>Change Password</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleResetPassword} className="space-y-4 pt-1">
             <div>

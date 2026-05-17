@@ -1,12 +1,11 @@
-import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
+import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { Layout } from "@/components/layout";
 import LoginPage from "@/pages/login";
-import OfficerDashboard from "@/pages/officer-dashboard";
-import { AuthContext, useAuthState, useAuth } from "@/hooks/use-auth";
+import { AuthContext, useAuthState } from "@/hooks/use-auth";
 
 import LiveBoard from "@/pages/live-board";
 import PersonnelManagement from "@/pages/personnel";
@@ -48,8 +47,6 @@ function AdminRouter() {
 }
 
 function AppContent() {
-  const { role } = useAuth();
-  if (role === "officer") return <OfficerDashboard />;
   return <AdminRouter />;
 }
 
