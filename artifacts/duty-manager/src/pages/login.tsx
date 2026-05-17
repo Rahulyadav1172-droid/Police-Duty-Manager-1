@@ -107,7 +107,7 @@ export default function LoginPage() {
             <Star className={`w-6 h-6 ${!isAdmin ? "text-amber-400" : "text-white/40"}`} />
             <div className="text-center">
               <p className="text-xs font-bold uppercase tracking-wide">Senior Officer</p>
-              <p className="text-[10px] text-white/50 mt-0.5">View & reports</p>
+              <p className="text-[10px] text-white/50 mt-0.5">DASHBOARD</p>
             </div>
           </button>
         </div>
