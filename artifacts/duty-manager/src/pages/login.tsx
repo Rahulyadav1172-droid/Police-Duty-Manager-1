@@ -90,7 +90,8 @@ export default function LoginPage() {
           >
             <ShieldCheck className={`w-6 h-6 ${isAdmin ? "text-blue-400" : "text-white/40"}`} />
             <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-wide">Admin</p>
+              <p className="text-xs font-bold uppercase tracking-wide">गणना कार्यालय
+              LOG in</p>
             </div>
           </button>
 
@@ -196,7 +197,6 @@ export default function LoginPage() {
           Ayodhya Police Line · Internal Portal · {new Date().getFullYear()}
         </p>
       </div>
-
       {/* Change Password Dialog */}
       <Dialog open={resetOpen} onOpenChange={setResetOpen}>
         <DialogContent className="max-w-sm">
