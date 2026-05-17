@@ -198,11 +198,11 @@ function printLetter(b: Booking) {
   .contact-line { margin-bottom: 5px; }
   .welcome-line { margin-bottom: 0; }
 
-  /* Signature — right-aligned */
+  /* Signature — centred on left half */
   .sign-block {
-    text-align: right;
-    padding-right: 6mm;
-    margin-top: 14px;
+    width: 55%;
+    text-align: center;
+    margin-top: 8px;
     margin-bottom: 14px;
     line-height: 1.65;
   }
