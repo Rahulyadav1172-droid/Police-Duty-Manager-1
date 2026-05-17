@@ -114,79 +114,149 @@ function printLetter(b: Booking) {
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap"/>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Noto Sans Devanagari',Arial,sans-serif; font-size:13pt; line-height:1.9; color:#111; background:#fff; padding:28mm 22mm 18mm 28mm; }
-  .header-bar { background:#0f2859; color:#fff; text-align:center; padding:10px 16px; margin-bottom:18px; border-radius:3px; }
-  .header-bar h1 { font-size:15pt; font-weight:700; letter-spacing:1px; }
-  .header-bar p  { font-size:10pt; margin-top:2px; opacity:.85; }
-  .ref-row { display:flex; justify-content:space-between; font-size:11pt; margin-bottom:18px; color:#333; }
-  .to-block { margin-bottom:14px; }
-  .to-block .name { font-weight:700; font-size:13pt; }
-  .subject-block { margin-bottom:14px; }
-  .subject-block .subj-label { font-weight:700; }
-  .body-para { text-indent:2em; margin-bottom:14px; text-align:justify; }
-  .booking-header { font-weight:700; margin-bottom:6px; }
-  .booking-list { list-style:none; padding-left:10px; margin-bottom:14px; }
-  .booking-list li { padding:2px 0; }
-  .booking-list li::before { content:"·  "; font-weight:bold; }
-  .contact-line { margin-bottom:10px; }
-  .welcome-line { margin-bottom:18px; }
-  .sign-block { text-align:right; margin-top:8px; margin-bottom:20px; line-height:1.7; }
-  .sign-block .cmd { font-weight:700; }
-  .copy-block { border-top:1px solid #555; padding-top:10px; font-size:11pt; }
-  @media print {
-    body { padding:14mm 16mm 10mm 20mm; }
-    @page { size:A4; margin:0; }
+  @page { size: A4 portrait; margin: 12mm 18mm 12mm 22mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    font-family: 'Noto Sans Devanagari', Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.55;
+    color: #111;
+    background: #fff;
+    width: 100%;
+    height: 100%;
+  }
+  .page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+  .content { flex: 1; }
+
+  /* Header */
+  .header-bar {
+    background: #0f2859;
+    color: #fff;
+    text-align: center;
+    padding: 7px 14px;
+    margin-bottom: 10px;
+    border-radius: 3px;
+  }
+  .header-bar h1 { font-size: 13pt; font-weight: 700; letter-spacing: .5px; }
+  .header-bar p  { font-size: 9pt; margin-top: 1px; opacity: .85; }
+
+  /* Ref row */
+  .ref-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10pt;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #ccc;
+    color: #333;
+  }
+
+  /* Sections */
+  .to-block      { margin-bottom: 8px; }
+  .to-block .name { font-weight: 700; }
+  .subject-block { margin-bottom: 8px; }
+  .subject-block .subj-label { font-weight: 700; text-decoration: underline; }
+  .body-para     { text-indent: 2em; margin-bottom: 8px; text-align: justify; }
+
+  /* Booking detail table */
+  .detail-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 10.5pt; }
+  .detail-table td { padding: 3px 6px; vertical-align: top; }
+  .detail-table td:first-child { font-weight: 600; white-space: nowrap; width: 46%; }
+  .detail-table tr:nth-child(even) td { background: #f5f7fa; }
+
+  .contact-line  { margin-bottom: 6px; font-size: 10.5pt; }
+  .welcome-line  { margin-bottom: 10px; font-size: 10.5pt; font-style: italic; }
+
+  /* Signature — centred */
+  .sign-block {
+    text-align: center;
+    margin-top: 12px;
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+  .sign-block .sign-gap {
+    display: block;
+    height: 22px;
+  }
+  .sign-block .cmd { font-weight: 700; font-size: 11.5pt; }
+
+  /* Copy */
+  .copy-block {
+    border-top: 1px solid #555;
+    padding-top: 7px;
+    font-size: 10pt;
   }
 </style>
 </head>
 <body>
-<div class="header-bar">
-  <h1>पुलिस ऑफिसर्स गेस्ट हाउस — अयोध्या पुलिस लाइन</h1>
-  <p>उत्तर प्रदेश पुलिस &nbsp;|&nbsp; Ayodhya Police Line, Uttar Pradesh</p>
-</div>
-<div class="ref-row">
-  <span>सं0 / Ref. No.: <strong>${b.refNo}</strong></span>
-  <span>दिनांक / Date: <strong>${bookingDateStr}</strong></span>
-</div>
-<div class="to-block">
-  <div>सेवा में,</div>
-  <div class="name">&nbsp;&nbsp;श्री ${b.guestName}</div>
-  <div>&nbsp;&nbsp;मो0नं0- +91 ${b.mobile}</div>
-</div>
-<div class="subject-block">
-  <span class="subj-label">विषयः</span>&nbsp;&nbsp;पुलिस आफिसर्स गेस्ट हाउस में सूट आरक्षित किये जाने की पुष्टि के संबंध में ।
-</div>
-<div class="body-para">
-  महोदय,<br/>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;अवगत कराना है कि पुलिस ऑफिसर्स गेस्ट हाउस में दिनांक <strong>${bookingDateStr}</strong> को आपके प्रवास हेतु <strong>${roomCount} रूम</strong> आरक्षित कर दिया गया है, जिसका विवरण निम्नवत हैः-
-</div>
-<div class="booking-header">बुकिंग विवरणः</div>
-<ul class="booking-list">
-  <li>गेस्ट का नामः &nbsp;श्री ${b.guestName}</li>
-  <li>कब से कब तकः &nbsp;दि0 ${checkInStr} से दि0 ${checkOutStr}</li>
-  <li>रूम की संख्याः &nbsp;${roomCount}</li>
-  <li>सूट नम्बरः &nbsp;${suitesStr}</li>
-  <li>चेक-इन / चेक-आउट की तिथि: &nbsp;${checkInStr} ${checkInTimeStr} &nbsp;/&nbsp; ${checkOutStr} ${checkOutTimeStr}</li>
-  <li>कुल दिनः &nbsp;${b.totalDays}</li>
-  <li>प्रति रूम प्रति दिन किरायाः &nbsp;₹${b.rentPerDay.toLocaleString("en-IN")}/-</li>
-  <li>फूड चार्जः &nbsp;${foodLine}${b.foodApplicable === "yes" && b.foodCharge ? `  (₹${b.foodCharge.toLocaleString("en-IN")}/-)` : ""}</li>
-</ul>
-<div class="contact-line">
-  <strong>सम्पर्क सूत्र ऑफिसर्स गेस्ट हाउस</strong>- उ0नि0 यदुनाथ &nbsp; मो0न0-8317041684
-</div>
-<div class="welcome-line">
-  हम आपके स्वागत के लिए उत्सुक हैं और आशा करते हैं कि आपका प्रवास सुखद रहेगा ।
-</div>
-<div class="sign-block">
-  <div>आज्ञा से</div>
-  <div class="cmd">वरिष्ठ पुलिस अधीक्षक</div>
-  <div>अयोध्या</div>
-</div>
-<div class="copy-block">
-  <strong>प्रतिलिपिः</strong> प्रभारी पुलिस ऑफिसर्स गेस्ट हाउस, पुलिस लाइन, अयोध्या संबंधित से समन्वय स्थापित करते हुए आवश्यक कार्यवाही करें ।
-</div>
-<script>window.onload=function(){setTimeout(function(){window.print();},800);};</script>
+<div class="page">
+  <div class="content">
+
+    <div class="header-bar">
+      <h1>पुलिस ऑफिसर्स गेस्ट हाउस — अयोध्या पुलिस लाइन</h1>
+      <p>उत्तर प्रदेश पुलिस &nbsp;|&nbsp; Ayodhya Police Line, Uttar Pradesh</p>
+    </div>
+
+    <div class="ref-row">
+      <span>सं0 / Ref. No.: <strong>${b.refNo}</strong></span>
+      <span>दिनांक / Date: <strong>${bookingDateStr}</strong></span>
+    </div>
+
+    <div class="to-block">
+      <div>सेवा में,</div>
+      <div class="name">&nbsp;&nbsp;श्री ${b.guestName}</div>
+      <div>&nbsp;&nbsp;मो0नं0- +91 ${b.mobile}</div>
+    </div>
+
+    <div class="subject-block">
+      <span class="subj-label">विषयः</span>&nbsp;
+      पुलिस आफिसर्स गेस्ट हाउस में सूट आरक्षित किये जाने की पुष्टि के संबंध में ।
+    </div>
+
+    <div class="body-para">
+      महोदय,<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;उपरोक्त विषयक अवगत कराना है कि पुलिस ऑफिसर्स गेस्ट हाउस में दिनांक <strong>${bookingDateStr}</strong> को आपके प्रवास हेतु <strong>${roomCount} रूम</strong> आरक्षित कर दिया गया है, जिसका विवरण निम्नवत हैः-
+    </div>
+
+    <table class="detail-table">
+      <tr><td>गेस्ट का नाम</td><td>श्री ${b.guestName}</td></tr>
+      <tr><td>कब से कब तक</td><td>दि0 ${checkInStr} से दि0 ${checkOutStr}</td></tr>
+      <tr><td>रूम की संख्या</td><td>${roomCount}</td></tr>
+      <tr><td>सूट नम्बर</td><td>${suitesStr}</td></tr>
+      <tr><td>चेक-इन / चेक-आउट</td><td>${checkInStr} ${checkInTimeStr} &nbsp;/&nbsp; ${checkOutStr} ${checkOutTimeStr}</td></tr>
+      <tr><td>कुल दिन</td><td>${b.totalDays}</td></tr>
+      <tr><td>प्रति रूम प्रति दिन किराया</td><td>₹${b.rentPerDay.toLocaleString("en-IN")}/-</td></tr>
+      <tr><td>फूड चार्ज</td><td>${foodLine}${b.foodApplicable === "yes" && b.foodCharge ? `  (₹${b.foodCharge.toLocaleString("en-IN")}/-)` : ""}</td></tr>
+    </table>
+
+    <div class="contact-line">
+      <strong>सम्पर्क सूत्र ऑफिसर्स गेस्ट हाउस</strong> — उ0नि0 यदुनाथ &nbsp; मो0न0-8317041684
+    </div>
+
+    <div class="welcome-line">
+      हम आपके स्वागत के लिए उत्सुक हैं और आशा करते हैं कि आपका प्रवास सुखद रहेगा ।
+    </div>
+
+  </div><!-- /content -->
+
+  <div class="sign-block">
+    <span class="sign-gap"></span>
+    <div>आज्ञा से</div>
+    <span class="sign-gap"></span>
+    <div class="cmd">वरिष्ठ पुलिस अधीक्षक</div>
+    <div>अयोध्या</div>
+  </div>
+
+  <div class="copy-block">
+    <strong>प्रतिलिपिः</strong> प्रभारी पुलिस ऑफिसर्स गेस्ट हाउस, पुलिस लाइन, अयोध्या — संबंधित से समन्वय स्थापित करते हुए आवश्यक कार्यवाही करें ।
+  </div>
+
+</div><!-- /page -->
+<script>window.onload=function(){setTimeout(function(){window.print();},900);};</script>
 </body>
 </html>`;
 
