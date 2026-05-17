@@ -1,19 +1,19 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Plus, Search, Trash2, Edit } from "lucide-react";
+import { Plus, Search, Trash2, Edit, Upload } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
-import { 
-  useListPersonnel, 
+import {
+  useListPersonnel,
   getListPersonnelQueryKey,
   useCreatePersonnel,
   useUpdatePersonnel,
   useDeletePersonnel,
   PersonnelRank,
-  Personnel
+  Personnel,
 } from "@workspace/api-client-react";
 
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { RankBadge } from "@/components/rank-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { ExcelUploadDialog, type ColumnDef } from "@/components/excel-upload-dialog";
 
 const personnelSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -34,14 +35,50 @@ const personnelSchema = z.object({
   rank: z.enum([PersonnelRank.Constable, PersonnelRank.Head_Constable, PersonnelRank["Sub-Inspector"], PersonnelRank.Inspector]),
 });
 
+type PersonnelRow = { name: string; beltNumber: string; mobileNumber: string; rank: string };
+
+const RANK_MAP: Record<string, string> = {
+  constable:        PersonnelRank.Constable,
+  "Constable":      PersonnelRank.Constable,
+  head_constable:   PersonnelRank.Head_Constable,
+  "Head Constable": PersonnelRank.Head_Constable,
+  "Head_Constable": PersonnelRank.Head_Constable,
+  sub_inspector:    PersonnelRank["Sub-Inspector"],
+  "Sub-Inspector":  PersonnelRank["Sub-Inspector"],
+  "Sub Inspector":  PersonnelRank["Sub-Inspector"],
+  "Sub_Inspector":  PersonnelRank["Sub-Inspector"],
+  inspector:        PersonnelRank.Inspector,
+  "Inspector":      PersonnelRank.Inspector,
+};
+
+const VALID_RANKS = Object.values(PersonnelRank);
+
+const excelColumns: ColumnDef<PersonnelRow>[] = [
+  { key: "name",         header: "Full Name",     required: true },
+  { key: "beltNumber",   header: "Belt Number",   required: true },
+  { key: "mobileNumber", header: "Mobile Number", required: true, validate: (v) => v.replace(/\D/g,"").length < 10 ? "Must be 10 digits" : null },
+  {
+    key: "rank",
+    header: "Rank",
+    required: true,
+    transform: (v) => RANK_MAP[v.trim()] ?? v.trim(),
+    validate: (v) => VALID_RANKS.includes(v as PersonnelRank) ? null : `Invalid rank. Use: Constable, Head Constable, Sub-Inspector, Inspector`,
+  },
+];
+
+const SAMPLE_ROWS = [
+  ["Ram Kumar Singh", "UP12345", "9876543210", "Constable"],
+  ["Shiv Prasad",     "UP12346", "9876543211", "Sub-Inspector"],
+];
+
 export default function PersonnelManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [showUpload, setShowUpload] = useState(false);
 
   const { data: personnel, isLoading } = useListPersonnel();
 
@@ -52,8 +89,8 @@ export default function PersonnelManagement() {
         setIsDialogOpen(false);
         toast({ title: "Personnel added successfully" });
       },
-      onError: () => toast({ title: "Failed to add personnel", variant: "destructive" })
-    }
+      onError: () => toast({ title: "Failed to add personnel", variant: "destructive" }),
+    },
   });
 
   const updateMutation = useUpdatePersonnel({
@@ -64,8 +101,8 @@ export default function PersonnelManagement() {
         setEditingId(null);
         toast({ title: "Personnel updated successfully" });
       },
-      onError: () => toast({ title: "Failed to update personnel", variant: "destructive" })
-    }
+      onError: () => toast({ title: "Failed to update personnel", variant: "destructive" }),
+    },
   });
 
   const deleteMutation = useDeletePersonnel({
@@ -75,39 +112,24 @@ export default function PersonnelManagement() {
         setDeleteId(null);
         toast({ title: "Personnel deleted successfully" });
       },
-      onError: () => toast({ title: "Failed to delete personnel", variant: "destructive" })
-    }
+      onError: () => toast({ title: "Failed to delete personnel", variant: "destructive" }),
+    },
   });
 
   const form = useForm<z.infer<typeof personnelSchema>>({
     resolver: zodResolver(personnelSchema),
-    defaultValues: {
-      name: "",
-      beltNumber: "",
-      mobileNumber: "",
-      rank: PersonnelRank.Constable,
-    },
+    defaultValues: { name: "", beltNumber: "", mobileNumber: "", rank: PersonnelRank.Constable },
   });
 
   const handleOpenAdd = () => {
     setEditingId(null);
-    form.reset({
-      name: "",
-      beltNumber: "",
-      mobileNumber: "",
-      rank: PersonnelRank.Constable,
-    });
+    form.reset({ name: "", beltNumber: "", mobileNumber: "", rank: PersonnelRank.Constable });
     setIsDialogOpen(true);
   };
 
   const handleOpenEdit = (person: Personnel) => {
     setEditingId(person.id);
-    form.reset({
-      name: person.name,
-      beltNumber: person.beltNumber,
-      mobileNumber: person.mobileNumber,
-      rank: person.rank as any,
-    });
+    form.reset({ name: person.name, beltNumber: person.beltNumber, mobileNumber: person.mobileNumber, rank: person.rank as any });
     setIsDialogOpen(true);
   };
 
@@ -119,10 +141,10 @@ export default function PersonnelManagement() {
     }
   };
 
-  const filteredPersonnel = personnel?.filter(p => 
+  const filteredPersonnel = personnel?.filter((p) =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.beltNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.mobileNumber.includes(searchTerm)
+    p.mobileNumber.includes(searchTerm),
   ) || [];
 
   return (
@@ -135,16 +157,20 @@ export default function PersonnelManagement() {
         <div className="flex items-center gap-3">
           <div className="relative w-full md:w-64">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input 
-              placeholder="Search personnel..." 
+            <Input
+              placeholder="Search personnel..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9"
             />
           </div>
-          <Button onClick={handleOpenAdd} data-testid="btn-add-personnel">
+          <Button variant="outline" onClick={() => setShowUpload(true)} className="gap-2 shrink-0">
+            <Upload className="w-4 h-4" />
+            Bulk Upload
+          </Button>
+          <Button onClick={handleOpenAdd} data-testid="btn-add-personnel" className="shrink-0">
             <Plus className="w-4 h-4 mr-2" />
-            Add Personnel
+            Add
           </Button>
         </div>
       </div>
@@ -184,12 +210,10 @@ export default function PersonnelManagement() {
                 <TableRow key={person.id}>
                   <TableCell className="font-mono text-sm font-medium">{person.beltNumber}</TableCell>
                   <TableCell className="font-medium">{person.name}</TableCell>
-                  <TableCell>
-                    <RankBadge rank={person.rank} />
-                  </TableCell>
+                  <TableCell><RankBadge rank={person.rank} /></TableCell>
                   <TableCell>{person.mobileNumber}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">
-                    {format(new Date(person.createdAt), 'MMM dd, yyyy')}
+                    {format(new Date(person.createdAt), "MMM dd, yyyy")}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -208,6 +232,7 @@ export default function PersonnelManagement() {
         </Table>
       </div>
 
+      {/* Add / Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -215,69 +240,45 @@ export default function PersonnelManagement() {
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter full name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <FormField control={form.control} name="name" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Name</FormLabel>
+                  <FormControl><Input placeholder="Enter full name" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
               <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="beltNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Belt Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. 12345" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="mobileNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Mobile Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="10-digit mobile" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={form.control}
-                name="rank"
-                render={({ field }) => (
+                <FormField control={form.control} name="beltNumber" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Rank</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a rank" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.values(PersonnelRank).map((rank) => (
-                          <SelectItem key={rank} value={rank}>{rank}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Belt Number</FormLabel>
+                    <FormControl><Input placeholder="e.g. 12345" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
+                )} />
+                <FormField control={form.control} name="mobileNumber" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mobile Number</FormLabel>
+                    <FormControl><Input placeholder="10-digit mobile" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+              <FormField control={form.control} name="rank" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Rank</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue placeholder="Select a rank" /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {Object.values(PersonnelRank).map((rank) => (
+                        <SelectItem key={rank} value={rank}>{rank}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
                 <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
@@ -289,25 +290,42 @@ export default function PersonnelManagement() {
         </DialogContent>
       </Dialog>
 
+      {/* Delete Confirm */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the personnel record.
-            </AlertDialogDescription>
+            <AlertDialogDescription>This will permanently delete the personnel record.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={() => deleteId && deleteMutation.mutate({ id: deleteId })}
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-            >
-              Delete
-            </AlertDialogAction>
+            >Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Bulk Upload */}
+      <ExcelUploadDialog<PersonnelRow>
+        open={showUpload}
+        onOpenChange={setShowUpload}
+        title="Bulk Upload Personnel"
+        columns={excelColumns}
+        templateFilename="AyodhyaPolice_Personnel_Template.xlsx"
+        templateSheetName="Personnel"
+        sampleRows={SAMPLE_ROWS}
+        onImportRow={(row) =>
+          new Promise<void>((resolve, reject) => {
+            createMutation.mutate(
+              { data: { name: row.name, beltNumber: row.beltNumber, mobileNumber: row.mobileNumber, rank: row.rank as PersonnelRank } },
+              { onSuccess: () => resolve(), onError: (e: any) => reject(e) },
+            );
+          })
+        }
+        onComplete={() => queryClient.invalidateQueries({ queryKey: getListPersonnelQueryKey() })}
+      />
     </div>
   );
 }

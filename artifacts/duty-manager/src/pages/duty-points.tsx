@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Plus, Search, Trash2, Edit, MapPin } from "lucide-react";
+import { Plus, Search, Trash2, Edit, MapPin, Upload } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
-import { 
-  useListDutyPoints, 
+import {
+  useListDutyPoints,
   getListDutyPointsQueryKey,
   useCreateDutyPoint,
   useUpdateDutyPoint,
   useDeleteDutyPoint,
-  DutyPoint
+  DutyPoint,
 } from "@workspace/api-client-react";
 
 import { Button } from "@/components/ui/button";
@@ -24,12 +24,26 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { ExcelUploadDialog, type ColumnDef } from "@/components/excel-upload-dialog";
 
 const dutyPointSchema = z.object({
   name: z.string().min(1, "Name is required"),
   location: z.string().min(1, "Location is required"),
   description: z.string().optional(),
 });
+
+type DutyPointRow = { name: string; location: string; description: string };
+
+const excelColumns: ColumnDef<DutyPointRow>[] = [
+  { key: "name",        header: "Point Name", required: true },
+  { key: "location",    header: "Location",   required: true },
+  { key: "description", header: "Description (Optional)" },
+];
+
+const SAMPLE_ROWS = [
+  ["Ram Janmabhoomi Gate", "Ayodhya Dham", "Main entry gate checkpoint"],
+  ["Hanuman Garhi Chowk",  "Hanuman Garhi Road", ""],
+];
 
 export default function DutyPointsManagement() {
   const { toast } = useToast();
@@ -38,6 +52,7 @@ export default function DutyPointsManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [showUpload, setShowUpload] = useState(false);
 
   const { data: dutyPoints, isLoading } = useListDutyPoints();
 
@@ -48,8 +63,8 @@ export default function DutyPointsManagement() {
         setIsDialogOpen(false);
         toast({ title: "Duty Point added successfully" });
       },
-      onError: () => toast({ title: "Failed to add duty point", variant: "destructive" })
-    }
+      onError: () => toast({ title: "Failed to add duty point", variant: "destructive" }),
+    },
   });
 
   const updateMutation = useUpdateDutyPoint({
@@ -60,8 +75,8 @@ export default function DutyPointsManagement() {
         setEditingId(null);
         toast({ title: "Duty Point updated successfully" });
       },
-      onError: () => toast({ title: "Failed to update duty point", variant: "destructive" })
-    }
+      onError: () => toast({ title: "Failed to update duty point", variant: "destructive" }),
+    },
   });
 
   const deleteMutation = useDeleteDutyPoint({
@@ -71,36 +86,24 @@ export default function DutyPointsManagement() {
         setDeleteId(null);
         toast({ title: "Duty Point deleted successfully" });
       },
-      onError: () => toast({ title: "Failed to delete duty point", variant: "destructive" })
-    }
+      onError: () => toast({ title: "Failed to delete duty point", variant: "destructive" }),
+    },
   });
 
   const form = useForm<z.infer<typeof dutyPointSchema>>({
     resolver: zodResolver(dutyPointSchema),
-    defaultValues: {
-      name: "",
-      location: "",
-      description: "",
-    },
+    defaultValues: { name: "", location: "", description: "" },
   });
 
   const handleOpenAdd = () => {
     setEditingId(null);
-    form.reset({
-      name: "",
-      location: "",
-      description: "",
-    });
+    form.reset({ name: "", location: "", description: "" });
     setIsDialogOpen(true);
   };
 
   const handleOpenEdit = (point: DutyPoint) => {
     setEditingId(point.id);
-    form.reset({
-      name: point.name,
-      location: point.location,
-      description: point.description || "",
-    });
+    form.reset({ name: point.name, location: point.location, description: point.description || "" });
     setIsDialogOpen(true);
   };
 
@@ -112,9 +115,9 @@ export default function DutyPointsManagement() {
     }
   };
 
-  const filteredPoints = dutyPoints?.filter(p => 
+  const filteredPoints = dutyPoints?.filter((p) =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.location.toLowerCase().includes(searchTerm.toLowerCase())
+    p.location.toLowerCase().includes(searchTerm.toLowerCase()),
   ) || [];
 
   return (
@@ -127,14 +130,18 @@ export default function DutyPointsManagement() {
         <div className="flex items-center gap-3">
           <div className="relative w-full md:w-64">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input 
-              placeholder="Search locations..." 
+            <Input
+              placeholder="Search locations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9"
             />
           </div>
-          <Button onClick={handleOpenAdd} data-testid="btn-add-duty-point">
+          <Button variant="outline" onClick={() => setShowUpload(true)} className="gap-2 shrink-0">
+            <Upload className="w-4 h-4" />
+            Bulk Upload
+          </Button>
+          <Button onClick={handleOpenAdd} data-testid="btn-add-duty-point" className="shrink-0">
             <Plus className="w-4 h-4 mr-2" />
             Add Point
           </Button>
@@ -179,11 +186,9 @@ export default function DutyPointsManagement() {
                     </div>
                   </TableCell>
                   <TableCell>{point.location}</TableCell>
-                  <TableCell className="text-muted-foreground max-w-[300px] truncate">
-                    {point.description || "-"}
-                  </TableCell>
+                  <TableCell className="text-muted-foreground max-w-[300px] truncate">{point.description || "-"}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">
-                    {format(new Date(point.createdAt), 'MMM dd, yyyy')}
+                    {format(new Date(point.createdAt), "MMM dd, yyyy")}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -202,6 +207,7 @@ export default function DutyPointsManagement() {
         </Table>
       </div>
 
+      {/* Add / Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -209,45 +215,27 @@ export default function DutyPointsManagement() {
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Point Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Checkpost Alpha" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="location"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Location</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Ram Path Crossing" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description (Optional)</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Any specific instructions for this post..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <FormField control={form.control} name="name" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Point Name</FormLabel>
+                  <FormControl><Input placeholder="e.g. Checkpost Alpha" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="location" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Location</FormLabel>
+                  <FormControl><Input placeholder="e.g. Ram Path Crossing" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="description" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description (Optional)</FormLabel>
+                  <FormControl><Textarea placeholder="Any specific instructions for this post..." {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
                 <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
@@ -259,25 +247,42 @@ export default function DutyPointsManagement() {
         </DialogContent>
       </Dialog>
 
+      {/* Delete Confirm */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the duty point.
-            </AlertDialogDescription>
+            <AlertDialogDescription>This will permanently delete the duty point.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={() => deleteId && deleteMutation.mutate({ id: deleteId })}
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-            >
-              Delete
-            </AlertDialogAction>
+            >Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Bulk Upload */}
+      <ExcelUploadDialog<DutyPointRow>
+        open={showUpload}
+        onOpenChange={setShowUpload}
+        title="Bulk Upload Duty Points"
+        columns={excelColumns}
+        templateFilename="AyodhyaPolice_DutyPoints_Template.xlsx"
+        templateSheetName="Duty Points"
+        sampleRows={SAMPLE_ROWS}
+        onImportRow={(row) =>
+          new Promise<void>((resolve, reject) => {
+            createMutation.mutate(
+              { data: { name: row.name, location: row.location, description: row.description || undefined } },
+              { onSuccess: () => resolve(), onError: (e: any) => reject(e) },
+            );
+          })
+        }
+        onComplete={() => queryClient.invalidateQueries({ queryKey: getListDutyPointsQueryKey() })}
+      />
     </div>
   );
 }
