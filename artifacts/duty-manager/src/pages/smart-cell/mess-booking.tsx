@@ -206,7 +206,8 @@ function printLetter(b: Booking) {
     margin-bottom: 14px;
     line-height: 1.65;
   }
-  .sign-block .cmd { font-weight: 700; }
+  .sign-block .cmd { font-weight: 700; font-size: 12pt; }
+  .sign-space { display: block; height: 20px; }
 
   /* Pratialipi */
   .copy-block {
@@ -295,15 +296,11 @@ function printLetter(b: Booking) {
 
     </div><!-- /letter-content -->
 
-    <!-- Signature (right-aligned, matching PDF) -->
+    <!-- Signature — bottom-left, centred within left block -->
     <div class="sign-block">
-      <div>&nbsp;</div>
-      <div>&nbsp;</div>
       <div>आज्ञा से</div>
-      <div>&nbsp;</div>
-      <div>&nbsp;</div>
-      <div class="cmd">वरिष्ठ पुलिस अधीक्षक</div>
-      <div>अयोध्या</div>
+      <div class="sign-space">&nbsp;</div>
+      <div class="cmd">पुलिस अधीक्षक, अयोध्या</div>
     </div>
 
     <!-- Pratialipi -->
