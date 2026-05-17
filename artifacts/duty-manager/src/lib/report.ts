@@ -62,8 +62,8 @@ export function generateShiftReport({ entries, statusFilter = "all", title }: Re
   doc.setFillColor(...NAVY);
   doc.rect(0, 0, pageWidth, 28, "F");
 
-  // UP Police Emblem (left)
-  drawUPPoliceEmblem(doc, 18, 14, 9);
+  // UP Police Emblem (left)  — header 28 mm, cy=14, r=12 → y 2..26
+  drawUPPoliceEmblem(doc, 18, 14, 12);
 
   // Title block
   doc.setFontSize(15);
@@ -275,9 +275,9 @@ export function generateHandoverReport(opts: HandoverOptions): void {
   doc.setFillColor(...GOLD);
   doc.rect(0, 34, pageWidth, 2, "F");
 
-  // UP Police Emblems (left and right)
-  drawUPPoliceEmblem(doc, 20, 18, 10);
-  drawUPPoliceEmblem(doc, pageWidth - 20, 18, 10);
+  // UP Police Emblems (left and right) — header 36 mm, cy=18, r=14 → y 4..32
+  drawUPPoliceEmblem(doc, 20, 18, 14);
+  drawUPPoliceEmblem(doc, pageWidth - 20, 18, 14);
 
   // Main title
   doc.setFontSize(16);
@@ -584,9 +584,9 @@ export function generateMusterRoll(opts: MusterOptions): void {
   doc.setFillColor(...GOLD);
   doc.rect(0, 38, pageWidth, 2, "F");
 
-  // UP Police Emblems (left and right)
-  drawUPPoliceEmblem(doc, 16, 20, 11);
-  drawUPPoliceEmblem(doc, pageWidth - 16, 20, 11);
+  // UP Police Emblems (left and right) — header 40 mm, cy=20, r=16 → y 4..36
+  drawUPPoliceEmblem(doc, 16, 20, 16);
+  drawUPPoliceEmblem(doc, pageWidth - 16, 20, 16);
 
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
@@ -867,9 +867,9 @@ export function generateTransferReceipt(data: TransferReceiptData): void {
   doc.setFillColor(...NAVY);
   doc.rect(0, 0, pageWidth, 36, "F");
 
-  // UP Police Emblems (left and right)
-  drawUPPoliceEmblem(doc, 20, 18, 11);
-  drawUPPoliceEmblem(doc, pageWidth - 20, 18, 11);
+  // UP Police Emblems (left and right) — header 36 mm, cy=18, r=14 → y 4..32
+  drawUPPoliceEmblem(doc, 20, 18, 14);
+  drawUPPoliceEmblem(doc, pageWidth - 20, 18, 14);
 
   // Title
   doc.setTextColor(...WHITE);
@@ -1140,8 +1140,9 @@ export function generateAttendanceSummary(opts: AttendanceSummaryOptions): void 
   doc.setFillColor(...GOLD);
   doc.rect(0, 38, pageWidth, 2, "F");
 
-  drawUPPoliceEmblem(doc, 16, 20, 11);
-  drawUPPoliceEmblem(doc, pageWidth - 16, 20, 11);
+  // UP Police Emblems (left and right) — header 40 mm, cy=20, r=16 → y 4..36
+  drawUPPoliceEmblem(doc, 16, 20, 16);
+  drawUPPoliceEmblem(doc, pageWidth - 16, 20, 16);
 
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
