@@ -5,13 +5,14 @@ import { z } from "zod";
 import {
   format, differenceInDays, parseISO,
   startOfMonth, endOfMonth, eachDayOfInterval,
-  addMonths, subMonths, isSameMonth,
+  addMonths, subMonths, isSameMonth, getDaysInMonth,
 } from "date-fns";
 import {
   BedDouble, FileText, Plus, Trash2, LogOut, Cpu,
   Phone, User, CalendarRange, Clock, Utensils, IndianRupee,
   Pencil, Search, X, ChevronLeft, ChevronRight,
-  CalendarDays, List, MessageCircle,
+  CalendarDays, List, MessageCircle, LayoutDashboard,
+  CheckCircle2, LogIn, LogOut as CheckOut, Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -344,6 +345,127 @@ function shareWhatsApp(b: Booking) {
   );
 }
 
+function printSummary(bookings: Booking[]) {
+  const today = format(new Date(), "yyyy-MM-dd");
+  const future = bookings
+    .filter((b) => b.checkOutDate >= today)
+    .sort((a, b) => a.checkInDate.localeCompare(b.checkInDate));
+  const reportDate = format(new Date(), "dd.MM.yyyy");
+
+  const rows = future.map((b, i) => `
+    <tr class="${i % 2 === 0 ? "" : "alt"}">
+      <td class="center">${i + 1}</td>
+      <td class="mono">${b.refNo}</td>
+      <td>${b.guestName}</td>
+      <td class="center">${b.rooms.join(", ")}</td>
+      <td class="center">${fmtDateHindi(b.checkInDate)}</td>
+      <td class="center">${fmtDateHindi(b.checkOutDate)}</td>
+      <td class="center">${b.totalDays}</td>
+      <td class="center">${b.rentPerDay ? `₹${b.rentPerDay.toLocaleString("en-IN")}` : "—"}</td>
+      <td class="center">${b.foodApplicable === "yes" ? "✓" : "—"}</td>
+    </tr>`).join("");
+
+  const totalRooms = future.reduce((s, b) => s + b.rooms.length, 0);
+  const totalDaysAll = future.reduce((s, b) => s + b.totalDays, 0);
+  const totalRevenue = future.reduce((s, b) => s + (b.totalRoomCharge ?? 0), 0);
+
+  const html = `<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8"/>
+<title>Booking Summary Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap"/>
+<style>
+  @page { size: A4 landscape; margin: 0; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:297mm; background:#fff; font-family:'Noto Sans Devanagari',Arial,sans-serif; }
+  .page { width:297mm; min-height:210mm; display:flex; flex-direction:column; }
+  .top-bar { height:6px; background:linear-gradient(to right,#0f2859 0%,#1a4a9e 40%,#c8960c 40%,#c8960c 60%,#0f2859 60%); }
+  .header { background:#0f2859; color:#fff; padding:10px 20px 9px; text-align:center; }
+  .header h1 { font-size:14pt; font-weight:700; letter-spacing:.5px; }
+  .header p  { font-size:9pt; opacity:.85; margin-top:2px; }
+  .gold-bar { height:4px; background:linear-gradient(to right,#c8960c,#f0c040,#c8960c); }
+  .body { flex:1; padding:6mm 10mm 5mm; }
+  .meta { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:8px; }
+  .meta .title { font-size:13pt; font-weight:700; color:#0f2859; }
+  .meta .date  { font-size:9pt; color:#555; }
+  .stats { display:flex; gap:10px; margin-bottom:10px; }
+  .stat-box { flex:1; background:#f0f4ff; border:1px solid #c5d0ef; border-radius:6px; padding:7px 10px; text-align:center; }
+  .stat-box .num  { font-size:16pt; font-weight:700; color:#0f2859; }
+  .stat-box .lbl  { font-size:8.5pt; color:#555; margin-top:1px; }
+  table { width:100%; border-collapse:collapse; font-size:9pt; }
+  th { background:#0f2859; color:#fff; padding:5px 7px; text-align:left; font-weight:600; }
+  th.center, td.center { text-align:center; }
+  td { padding:4px 7px; border-bottom:1px solid #e8eaf0; vertical-align:top; }
+  tr.alt td { background:#f7f9ff; }
+  .mono { font-family:monospace; font-size:8pt; }
+  .footer { display:flex; justify-content:space-between; align-items:flex-end; margin-top:8px; }
+  .footer .note { font-size:8pt; color:#777; font-style:italic; }
+  .footer .sign { text-align:center; font-size:9.5pt; line-height:1.6; }
+  .footer .sign .cmd { font-weight:700; }
+  .bottom-bar { height:6px; background:linear-gradient(to right,#0f2859 0%,#1a4a9e 40%,#c8960c 40%,#c8960c 60%,#0f2859 60%); margin-top:auto; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top-bar"></div>
+  <div class="header">
+    <h1>पुलिस ऑफिसर्स गेस्ट हाउस — अयोध्या पुलिस लाइन</h1>
+    <p>उत्तर प्रदेश पुलिस &nbsp;|&nbsp; Ayodhya Police Line, Uttar Pradesh</p>
+  </div>
+  <div class="gold-bar"></div>
+  <div class="body">
+    <div class="meta">
+      <div>
+        <div class="title">भविष्य की बुकिंग सारांश रिपोर्ट</div>
+        <div style="font-size:9pt;color:#555;margin-top:2px;">Upcoming &amp; Current Bookings Summary</div>
+      </div>
+      <div class="date">रिपोर्ट दिनांक: <strong>${reportDate}</strong></div>
+    </div>
+    <div class="stats">
+      <div class="stat-box"><div class="num">${future.length}</div><div class="lbl">कुल बुकिंग</div></div>
+      <div class="stat-box"><div class="num">${totalRooms}</div><div class="lbl">कुल रूम</div></div>
+      <div class="stat-box"><div class="num">${totalDaysAll}</div><div class="lbl">कुल दिन</div></div>
+      <div class="stat-box"><div class="num">${totalRevenue > 0 ? "₹" + totalRevenue.toLocaleString("en-IN") : "—"}</div><div class="lbl">अनुमानित आय</div></div>
+    </div>
+    ${future.length === 0
+      ? `<div style="text-align:center;padding:30px;color:#888;font-size:11pt;">कोई भविष्य की बुकिंग नहीं मिली।</div>`
+      : `<table>
+      <thead>
+        <tr>
+          <th class="center" style="width:28px;">#</th>
+          <th>सं0 / Ref</th>
+          <th>गेस्ट का नाम</th>
+          <th class="center">सूट</th>
+          <th class="center">चेक-इन</th>
+          <th class="center">चेक-आउट</th>
+          <th class="center">दिन</th>
+          <th class="center">किराया/दिन</th>
+          <th class="center">भोजन</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`}
+    <div class="footer">
+      <div class="note">यह रिपोर्ट ${reportDate} को Smart Cell प्रणाली द्वारा स्वतः तैयार की गई है।</div>
+      <div class="sign">
+        <div>आज्ञा से</div>
+        <div>&nbsp;</div>
+        <div class="cmd">पुलिस अधीक्षक, अयोध्या</div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar"></div>
+</div>
+<script>window.onload=function(){setTimeout(function(){window.print();},900);};</script>
+</body>
+</html>`;
+
+  const win = window.open("", "_blank", "width=1050,height=700");
+  if (win) { win.document.write(html); win.document.close(); }
+}
+
 function isRoomBooked(room: string, dateStr: string, bookings: Booking[]): boolean {
   return bookings.some(
     (b) => b.rooms.includes(room as RoomName) && b.checkInDate <= dateStr && b.checkOutDate > dateStr,
@@ -357,7 +479,7 @@ export default function MessBooking() {
   const [bookings, setBookings]     = useState<Booking[]>(loadBookings);
   const [formOpen, setFormOpen]     = useState(false);
   const [editingId, setEditingId]   = useState<string | null>(null);
-  const [activeTab, setActiveTab]   = useState<"records" | "availability">("records");
+  const [activeTab, setActiveTab]   = useState<"dashboard" | "records" | "availability">("dashboard");
   const [calMonth, setCalMonth]     = useState(new Date());
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRoom, setFilterRoom]   = useState<string>("all");
@@ -473,6 +595,43 @@ export default function MessBooking() {
 
   const hasActiveFilters = searchQuery || filterRoom !== "all" || filterFrom || filterTo;
 
+  // ── Dashboard computed values ──────────────────────────────────
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  const thisMonth = new Date();
+  const daysInMonth = getDaysInMonth(thisMonth);
+  const monthStart = format(startOfMonth(thisMonth), "yyyy-MM-dd");
+  const monthEnd   = format(endOfMonth(thisMonth),   "yyyy-MM-dd");
+
+  const occupiedToday = useMemo(
+    () => bookings.filter((b) => b.checkInDate <= todayStr && b.checkOutDate > todayStr),
+    [bookings, todayStr],
+  );
+  const checkingInToday  = useMemo(() => bookings.filter((b) => b.checkInDate === todayStr),  [bookings, todayStr]);
+  const checkingOutToday = useMemo(() => bookings.filter((b) => b.checkOutDate === todayStr), [bookings, todayStr]);
+  const availableSuitesCount = ROOMS.filter(
+    (r) => !occupiedToday.some((b) => b.rooms.includes(r)),
+  ).length;
+
+  const occupancyPct = useMemo(() => {
+    const pct: Record<string, number> = {};
+    ROOMS.forEach((r) => {
+      const calDaysM = eachDayOfInterval({ start: startOfMonth(thisMonth), end: endOfMonth(thisMonth) });
+      const bookedDays = calDaysM.filter((d) => {
+        const ds = format(d, "yyyy-MM-dd");
+        return bookings.some((b) => b.rooms.includes(r) && b.checkInDate <= ds && b.checkOutDate > ds);
+      }).length;
+      pct[r] = Math.round((bookedDays / daysInMonth) * 100);
+    });
+    return pct;
+  }, [bookings]);
+
+  const futureBookings = useMemo(
+    () => bookings
+      .filter((b) => b.checkOutDate >= todayStr)
+      .sort((a, b) => a.checkInDate.localeCompare(b.checkInDate)),
+    [bookings, todayStr],
+  );
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
 
@@ -494,20 +653,15 @@ export default function MessBooking() {
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-6 space-y-6">
 
-        {/* Suite cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {ROOMS.map((room) => (
-            <div key={room} className="bg-white rounded-xl border shadow-sm p-4 flex flex-col items-center gap-2">
-              <BedDouble className="w-7 h-7 text-emerald-600" />
-              <p className="font-bold text-sm">{room}</p>
-              <Badge variant="secondary" className="text-xs">{roomCounts[room]} booking{roomCounts[room] !== 1 ? "s" : ""}</Badge>
-            </div>
-          ))}
-        </div>
-
         {/* Tab bar + New Booking */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex rounded-lg border overflow-hidden text-sm font-medium">
+            <button
+              onClick={() => setActiveTab("dashboard")}
+              className={`flex items-center gap-1.5 px-4 py-2 transition-colors ${activeTab === "dashboard" ? "bg-emerald-600 text-white" : "bg-background text-muted-foreground hover:bg-muted"}`}
+            >
+              <LayoutDashboard className="w-3.5 h-3.5" /> Dashboard
+            </button>
             <button
               onClick={() => setActiveTab("records")}
               className={`flex items-center gap-1.5 px-4 py-2 transition-colors ${activeTab === "records" ? "bg-emerald-600 text-white" : "bg-background text-muted-foreground hover:bg-muted"}`}
@@ -525,6 +679,147 @@ export default function MessBooking() {
             <Plus className="w-4 h-4" /> New Booking
           </Button>
         </div>
+
+        {/* ── DASHBOARD TAB ── */}
+        {activeTab === "dashboard" && (
+          <div className="space-y-5">
+
+            {/* Today stat cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="bg-white rounded-xl border shadow-sm p-4 flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-emerald-600 mb-1">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span className="text-xs font-semibold uppercase tracking-wide">Occupied Today</span>
+                </div>
+                <p className="text-3xl font-bold text-slate-800">{occupiedToday.length}</p>
+                <p className="text-xs text-muted-foreground">suite{occupiedToday.length !== 1 ? "s" : ""} in use</p>
+              </div>
+              <div className="bg-white rounded-xl border shadow-sm p-4 flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-blue-600 mb-1">
+                  <LogIn className="w-4 h-4" />
+                  <span className="text-xs font-semibold uppercase tracking-wide">Checking In</span>
+                </div>
+                <p className="text-3xl font-bold text-slate-800">{checkingInToday.length}</p>
+                <p className="text-xs text-muted-foreground">arriving today</p>
+              </div>
+              <div className="bg-white rounded-xl border shadow-sm p-4 flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-amber-600 mb-1">
+                  <CheckOut className="w-4 h-4" />
+                  <span className="text-xs font-semibold uppercase tracking-wide">Checking Out</span>
+                </div>
+                <p className="text-3xl font-bold text-slate-800">{checkingOutToday.length}</p>
+                <p className="text-xs text-muted-foreground">departing today</p>
+              </div>
+              <div className="bg-white rounded-xl border shadow-sm p-4 flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-slate-500 mb-1">
+                  <BedDouble className="w-4 h-4" />
+                  <span className="text-xs font-semibold uppercase tracking-wide">Available</span>
+                </div>
+                <p className="text-3xl font-bold text-slate-800">{availableSuitesCount}</p>
+                <p className="text-xs text-muted-foreground">suites free today</p>
+              </div>
+            </div>
+
+            {/* Suite occupancy % for current month */}
+            <div className="bg-white rounded-xl border shadow-sm p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-sm text-slate-800">
+                  Suite Occupancy — {format(new Date(), "MMMM yyyy")}
+                </h3>
+                <span className="text-xs text-muted-foreground">{daysInMonth} days in month</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {ROOMS.map((room) => {
+                  const pct = occupancyPct[room] ?? 0;
+                  const isOccupiedNow = occupiedToday.some((b) => b.rooms.includes(room));
+                  return (
+                    <div key={room} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <BedDouble className={`w-4 h-4 ${isOccupiedNow ? "text-emerald-600" : "text-slate-400"}`} />
+                          <span className="text-sm font-semibold">{room}</span>
+                        </div>
+                        {isOccupiedNow && <Badge className="text-[10px] bg-emerald-100 text-emerald-700 border-emerald-200">In Use</Badge>}
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-2.5">
+                        <div
+                          className={`h-2.5 rounded-full transition-all ${pct > 70 ? "bg-emerald-500" : pct > 30 ? "bg-blue-500" : "bg-slate-300"}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>{pct}% occupied</span>
+                        <span>{roomCounts[room]} booking{roomCounts[room] !== 1 ? "s" : ""}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Upcoming bookings + PDF button */}
+            <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3 border-b">
+                <div>
+                  <h3 className="font-bold text-sm text-slate-800">Upcoming & Current Bookings</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">{futureBookings.length} booking{futureBookings.length !== 1 ? "s" : ""} from today onwards</p>
+                </div>
+                <Button
+                  onClick={() => printSummary(bookings)}
+                  variant="outline"
+                  className="gap-2 text-sm border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                >
+                  <Download className="w-4 h-4" /> Download Summary PDF
+                </Button>
+              </div>
+
+              {futureBookings.length === 0 ? (
+                <div className="p-10 text-center text-muted-foreground">
+                  <CalendarDays className="w-10 h-10 opacity-25 mx-auto mb-3" />
+                  <p className="font-medium">No upcoming bookings</p>
+                  <p className="text-sm mt-1">All current bookings have checked out. Create a new booking to see it here.</p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {futureBookings.map((b) => {
+                    const isToday = b.checkInDate <= todayStr && b.checkOutDate > todayStr;
+                    const isCheckingIn  = b.checkInDate  === todayStr;
+                    const isCheckingOut = b.checkOutDate === todayStr;
+                    return (
+                      <div key={b.id} className={`px-5 py-3 flex items-center gap-4 flex-wrap ${isToday ? "bg-emerald-50/60" : ""}`}>
+                        <div className="w-1 self-stretch rounded-full shrink-0" style={{ background: isToday ? "#10b981" : isCheckingIn ? "#3b82f6" : "#e2e8f0" }} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-sm">{b.guestName}</span>
+                            <Badge variant="outline" className="text-[10px] font-mono">{b.refNo}</Badge>
+                            {isToday && <Badge className="text-[10px] bg-emerald-100 text-emerald-700 border-emerald-200">Staying</Badge>}
+                            {isCheckingIn  && <Badge className="text-[10px] bg-blue-100 text-blue-700 border-blue-200">Check-in Today</Badge>}
+                            {isCheckingOut && <Badge className="text-[10px] bg-amber-100 text-amber-700 border-amber-200">Check-out Today</Badge>}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {b.rooms.join(", ")} &nbsp;·&nbsp; {fmtDate(b.checkInDate)} → {fmtDate(b.checkOutDate)} &nbsp;·&nbsp; {b.totalDays} day{b.totalDays !== 1 ? "s" : ""}
+                            {b.rentPerDay ? ` · ₹${b.totalRoomCharge.toLocaleString("en-IN")} total` : ""}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button onClick={() => printLetter(b)} className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50" title="Print letter">
+                            <FileText className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => shareWhatsApp(b)} className="p-1.5 rounded-lg text-green-600 hover:bg-green-50" title="WhatsApp">
+                            <MessageCircle className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => openEdit(b)} className="p-1.5 rounded-lg text-amber-600 hover:bg-amber-50" title="Edit">
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* ── RECORDS TAB ── */}
         {activeTab === "records" && (
