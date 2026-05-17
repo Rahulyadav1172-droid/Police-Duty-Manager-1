@@ -2,6 +2,77 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 
+/**
+ * Draws the Uttar Pradesh Police circular emblem using vector primitives.
+ * cx/cy = centre in mm, r = outer radius in mm.
+ */
+function drawUPPoliceEmblem(doc: jsPDF, cx: number, cy: number, r: number): void {
+  const NAVY   = [13,  27,  62]  as [number, number, number];
+  const GOLD   = [180, 140, 40]  as [number, number, number];
+  const WHITE  = [255, 255, 255] as [number, number, number];
+  const SAFFRON= [219, 100,  18] as [number, number, number];
+
+  // 1. Outer navy disc
+  doc.setFillColor(...NAVY);
+  doc.circle(cx, cy, r, "F");
+
+  // 2. Thin saffron outer ring
+  doc.setDrawColor(...SAFFRON);
+  doc.setLineWidth(r * 0.07);
+  doc.circle(cx, cy, r * 0.92, "S");
+
+  // 3. Gold decorative ring
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(r * 0.06);
+  doc.circle(cx, cy, r * 0.82, "S");
+
+  // 4. White inner disc
+  doc.setFillColor(...WHITE);
+  doc.circle(cx, cy, r * 0.70, "F");
+
+  // 5. Navy Ashoka-wheel disc (inner)
+  doc.setFillColor(...NAVY);
+  doc.circle(cx, cy, r * 0.45, "F");
+
+  // 6. Eight white spokes
+  doc.setDrawColor(...WHITE);
+  doc.setLineWidth(r * 0.05);
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    doc.line(
+      cx + Math.cos(a) * r * 0.14, cy + Math.sin(a) * r * 0.14,
+      cx + Math.cos(a) * r * 0.43, cy + Math.sin(a) * r * 0.43,
+    );
+  }
+
+  // 7. Gold hub dot
+  doc.setFillColor(...GOLD);
+  doc.circle(cx, cy, r * 0.12, "F");
+
+  // 8. Text in white band — "UTTAR PRADESH" top, "POLICE" bottom
+  const fSz = Math.max(3.2, r * 0.38);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(fSz);
+  doc.setTextColor(...NAVY);
+  doc.text("UTTAR PRADESH", cx, cy - r * 0.515, { align: "center" });
+  doc.text("POLICE", cx, cy + r * 0.63, { align: "center" });
+
+  // 9. 12 gold dots on the inner gold ring
+  doc.setFillColor(...GOLD);
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2 - Math.PI / 2;
+    doc.circle(
+      cx + Math.cos(a) * r * 0.82,
+      cy + Math.sin(a) * r * 0.82,
+      r * 0.038, "F",
+    );
+  }
+
+  // 10. Reset drawing state
+  doc.setLineWidth(0.3);
+  doc.setDrawColor(0, 0, 0);
+}
+
 type RosterEntry = {
   id: number;
   personnelId: number;
@@ -52,15 +123,8 @@ export function generateShiftReport({ entries, statusFilter = "all", title }: Re
   doc.setFillColor(...NAVY);
   doc.rect(0, 0, pageWidth, 28, "F");
 
-  // Emblem placeholder (circle)
-  doc.setFillColor(...LIGHT_BLUE);
-  doc.circle(18, 14, 9, "F");
-  doc.setFillColor(...NAVY);
-  doc.setFontSize(7);
-  doc.setTextColor(...WHITE);
-  doc.setFont("helvetica", "bold");
-  doc.text("UP", 18, 12.5, { align: "center" });
-  doc.text("POLICE", 18, 16.5, { align: "center" });
+  // UP Police Emblem (left)
+  drawUPPoliceEmblem(doc, 18, 14, 9);
 
   // Title block
   doc.setFontSize(15);
@@ -272,25 +336,9 @@ export function generateHandoverReport(opts: HandoverOptions): void {
   doc.setFillColor(...GOLD);
   doc.rect(0, 34, pageWidth, 2, "F");
 
-  // Emblem circle left
-  doc.setFillColor(...WHITE);
-  doc.circle(20, 18, 10, "F");
-  doc.setFontSize(6.5);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...NAVY);
-  doc.text("AYODHYA", 20, 15, { align: "center" });
-  doc.text("POLICE", 20, 19, { align: "center" });
-  doc.text("LINE", 20, 23, { align: "center" });
-
-  // Emblem circle right (mirror)
-  doc.setFillColor(...WHITE);
-  doc.circle(pageWidth - 20, 18, 10, "F");
-  doc.setFontSize(6.5);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...NAVY);
-  doc.text("AYODHYA", pageWidth - 20, 15, { align: "center" });
-  doc.text("POLICE", pageWidth - 20, 19, { align: "center" });
-  doc.text("LINE", pageWidth - 20, 23, { align: "center" });
+  // UP Police Emblems (left and right)
+  drawUPPoliceEmblem(doc, 20, 18, 10);
+  drawUPPoliceEmblem(doc, pageWidth - 20, 18, 10);
 
   // Main title
   doc.setFontSize(16);
@@ -597,17 +645,9 @@ export function generateMusterRoll(opts: MusterOptions): void {
   doc.setFillColor(...GOLD);
   doc.rect(0, 38, pageWidth, 2, "F");
 
-  // Emblem circles
-  [16, pageWidth - 16].forEach((cx) => {
-    doc.setFillColor(...WHITE);
-    doc.circle(cx, 20, 11, "F");
-    doc.setFontSize(6);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...NAVY);
-    doc.text("AYODHYA", cx, 17, { align: "center" });
-    doc.text("POLICE", cx, 21, { align: "center" });
-    doc.text("LINE", cx, 25, { align: "center" });
-  });
+  // UP Police Emblems (left and right)
+  drawUPPoliceEmblem(doc, 16, 20, 11);
+  drawUPPoliceEmblem(doc, pageWidth - 16, 20, 11);
 
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
@@ -888,24 +928,9 @@ export function generateTransferReceipt(data: TransferReceiptData): void {
   doc.setFillColor(...NAVY);
   doc.rect(0, 0, pageWidth, 36, "F");
 
-  // Left emblem
-  doc.setFillColor(...LIGHT_BLUE);
-  doc.circle(20, 18, 11, "F");
-  doc.setFontSize(6.5);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...NAVY);
-  doc.text("UP",     20, 15.5, { align: "center" });
-  doc.text("POLICE", 20, 19.5, { align: "center" });
-  doc.text("",       20, 23,   { align: "center" });
-
-  // Right emblem
-  doc.setFillColor(...LIGHT_BLUE);
-  doc.circle(pageWidth - 20, 18, 11, "F");
-  doc.setFontSize(6.5);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...NAVY);
-  doc.text("UP",     pageWidth - 20, 15.5, { align: "center" });
-  doc.text("POLICE", pageWidth - 20, 19.5, { align: "center" });
+  // UP Police Emblems (left and right)
+  drawUPPoliceEmblem(doc, 20, 18, 11);
+  drawUPPoliceEmblem(doc, pageWidth - 20, 18, 11);
 
   // Title
   doc.setTextColor(...WHITE);
@@ -1102,4 +1127,258 @@ export function generateTransferReceipt(data: TransferReceiptData): void {
   // ── Save ────────────────────────────────────────────────────────────────────
   const safeName = data.name.replace(/\s+/g, "_").toUpperCase();
   doc.save(`AyodhyaPolice_TransferReceipt_${safeName}_${format(now, "yyyyMMdd")}.pdf`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Attendance Summary Report
+// ─────────────────────────────────────────────────────────────────────────────
+
+type AttendancePersonnel = {
+  id: number;
+  name: string;
+  beltNumber: string;
+  rank: string;
+  mobileNumber?: string;
+};
+
+type AttendanceLiveEntry = {
+  personnelId: number;
+  dutyPoint?: { name: string; location: string } | null;
+};
+
+type AttendanceLeaveEntry = {
+  personnelId: number;
+  leaveType?: string | null;
+};
+
+type AttendanceLiveBoard = {
+  onDuty: AttendanceLiveEntry[];
+  available: { id: number }[];
+} | undefined | null;
+
+type AttendanceSummaryOptions = {
+  personnel: AttendancePersonnel[];
+  onDutyIds: Set<number>;
+  onLeaveIds: Set<number>;
+  leaveToday: AttendanceLeaveEntry[];
+  liveBoard: AttendanceLiveBoard;
+  rankBreakdown: [string, { total: number; onDuty: number; onLeave: number; available: number }][];
+};
+
+const RANK_ORDER_ATT: Record<string, number> = {
+  Inspector: 1,
+  "Sub-Inspector": 2,
+  "Head Constable": 3,
+  Constable: 4,
+};
+
+export function generateAttendanceSummary(opts: AttendanceSummaryOptions): void {
+  const { personnel, onDutyIds, onLeaveIds, leaveToday, liveBoard, rankBreakdown } = opts;
+  const now = new Date();
+
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const pageWidth  = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  const NAVY    = [13,  27,  62]  as [number, number, number];
+  const GOLD    = [180, 140, 40]  as [number, number, number];
+  const WHITE   = [255, 255, 255] as [number, number, number];
+  const LIGHT   = [240, 244, 255] as [number, number, number];
+  const DARK    = [20,  20,  30]  as [number, number, number];
+  const GRAY    = [100, 100, 110] as [number, number, number];
+  const BLUE    = [37,  99,  235] as [number, number, number];
+  const GREEN   = [22,  101, 52]  as [number, number, number];
+  const AMBER   = [180, 110, 10]  as [number, number, number];
+
+  const total     = personnel.length;
+  const onDuty    = onDutyIds.size;
+  const onLeave   = onLeaveIds.size;
+  const available = total - onDuty - onLeave;
+
+  // ── Header ────────────────────────────────────────────────────────────────
+  doc.setFillColor(...NAVY);
+  doc.rect(0, 0, pageWidth, 40, "F");
+  doc.setFillColor(...GOLD);
+  doc.rect(0, 38, pageWidth, 2, "F");
+
+  drawUPPoliceEmblem(doc, 16, 20, 11);
+  drawUPPoliceEmblem(doc, pageWidth - 16, 20, 11);
+
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...WHITE);
+  doc.text("AYODHYA POLICE LINE", pageWidth / 2, 12, { align: "center" });
+
+  doc.setFontSize(11);
+  doc.text("DAILY ATTENDANCE SUMMARY", pageWidth / 2, 22, { align: "center" });
+
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...GOLD);
+  doc.text(
+    `Parade Date: ${format(now, "dd MMMM yyyy (EEEE)")}   |   Generated: ${format(now, "HH:mm")} hrs`,
+    pageWidth / 2, 31, { align: "center" },
+  );
+
+  // ── Stat boxes ────────────────────────────────────────────────────────────
+  const margin = 12;
+  const boxW   = (pageWidth - margin * 2 - 9) / 4;
+  const boxY   = 46;
+  const boxH   = 24;
+
+  const boxes = [
+    { label: "Total Strength", value: total,     color: NAVY,  light: LIGHT },
+    { label: "On Duty",        value: onDuty,    color: BLUE,  light: [232, 240, 254] as [number,number,number] },
+    { label: "Available",      value: available, color: GREEN, light: [220, 252, 231] as [number,number,number] },
+    { label: "On Leave",       value: onLeave,   color: AMBER, light: [255, 243, 205] as [number,number,number] },
+  ];
+
+  boxes.forEach(({ label, value, color, light }, i) => {
+    const x = margin + i * (boxW + 3);
+    doc.setFillColor(...light);
+    doc.roundedRect(x, boxY, boxW, boxH, 2, 2, "F");
+    doc.setFillColor(...color);
+    doc.roundedRect(x, boxY, boxW, 5, 2, 2, "F");
+    doc.rect(x, boxY + 3, boxW, 2, "F");
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(...color);
+    doc.text(String(value), x + boxW / 2, boxY + 17, { align: "center" });
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(6.5);
+    doc.setTextColor(...WHITE);
+    doc.text(label.toUpperCase(), x + boxW / 2, boxY + 3.5, { align: "center" });
+  });
+
+  // ── Attendance bar ────────────────────────────────────────────────────────
+  const barY = boxY + boxH + 8;
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...DARK);
+  doc.text("ATTENDANCE AT A GLANCE", margin, barY);
+
+  const barH    = 6;
+  const barTopY = barY + 4;
+  const totalW  = pageWidth - margin * 2;
+
+  if (total > 0) {
+    // On Duty segment
+    if (onDuty > 0) {
+      const w = (onDuty / total) * totalW;
+      doc.setFillColor(...BLUE);
+      doc.rect(margin, barTopY, w, barH, "F");
+    }
+    // Available segment
+    if (available > 0) {
+      const w = (available / total) * totalW;
+      doc.setFillColor(...GREEN);
+      doc.rect(margin + (onDuty / total) * totalW, barTopY, w, barH, "F");
+    }
+    // On Leave segment
+    if (onLeave > 0) {
+      const w = (onLeave / total) * totalW;
+      doc.setFillColor(...AMBER);
+      doc.rect(margin + ((onDuty + available) / total) * totalW, barTopY, w, barH, "F");
+    }
+  }
+
+  // Legend
+  const legY = barTopY + barH + 5;
+  [[...BLUE, "On Duty"], [...GREEN, "Available"], [...AMBER, "On Leave"]].forEach(([r, g, b, lbl], i) => {
+    const lx = margin + i * 50;
+    doc.setFillColor(r as number, g as number, b as number);
+    doc.rect(lx, legY - 3, 5, 3, "F");
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...DARK);
+    doc.text(lbl as string, lx + 7, legY - 0.5);
+  });
+
+  // ── Rank-wise table ────────────────────────────────────────────────────────
+  const rankY = legY + 6;
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...DARK);
+  doc.text("RANK-WISE STRENGTH", margin, rankY);
+
+  autoTable(doc, {
+    startY: rankY + 3,
+    head: [["Rank", "Total", "On Duty", "Available", "On Leave"]],
+    body: rankBreakdown.map(([rank, c]) => [rank, c.total, c.onDuty, c.available, c.onLeave]),
+    styles: { fontSize: 8, cellPadding: { top: 2, right: 4, bottom: 2, left: 4 }, font: "helvetica" },
+    headStyles: { fillColor: NAVY, textColor: WHITE, fontStyle: "bold" },
+    columnStyles: {
+      0: { fontStyle: "bold" },
+      1: { halign: "center", fontStyle: "bold" },
+      2: { halign: "center", textColor: [37, 99, 235] as [number,number,number] },
+      3: { halign: "center", textColor: [22, 101, 52] as [number,number,number] },
+      4: { halign: "center", textColor: [180, 110, 10] as [number,number,number] },
+    },
+    alternateRowStyles: { fillColor: [245, 247, 255] as [number,number,number] },
+    margin: { left: margin, right: margin },
+  });
+
+  // ── Individual personnel table ─────────────────────────────────────────────
+  const lastY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
+
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...DARK);
+  doc.text("INDIVIDUAL PERSONNEL STATUS", margin, lastY + 8);
+
+  const sorted = [...personnel].sort(
+    (a, b) => (RANK_ORDER_ATT[a.rank] ?? 9) - (RANK_ORDER_ATT[b.rank] ?? 9) || a.name.localeCompare(b.name),
+  );
+
+  const rows = sorted.map((p, idx) => {
+    const onDutyEntry = liveBoard?.onDuty.find(e => e.personnelId === p.id);
+    const onLeaveEntry = leaveToday.find(l => l.personnelId === p.id);
+    let statusLabel = "AVAILABLE";
+    let detail = "—";
+    if (onDutyEntry) { statusLabel = "ON DUTY"; detail = onDutyEntry.dutyPoint?.name ?? "—"; }
+    else if (onLeaveEntry) { statusLabel = "ON LEAVE"; detail = (onLeaveEntry.leaveType ?? "Leave").replace(/_/g, " "); }
+    return [String(idx + 1), p.name, p.beltNumber, p.rank, statusLabel, detail];
+  });
+
+  autoTable(doc, {
+    startY: lastY + 11,
+    head: [["S.No", "Name", "PNO No.", "Rank", "Status", "Duty Point / Leave"]],
+    body: rows,
+    styles: { fontSize: 7.5, cellPadding: { top: 2, right: 3, bottom: 2, left: 3 }, font: "helvetica" },
+    headStyles: { fillColor: NAVY, textColor: WHITE, fontStyle: "bold", fontSize: 7.5 },
+    columnStyles: {
+      0: { halign: "center", cellWidth: 10 },
+      2: { font: "courier", fontSize: 7 },
+      4: { fontStyle: "bold" },
+    },
+    alternateRowStyles: { fillColor: [245, 247, 255] as [number,number,number] },
+    margin: { left: margin, right: margin },
+    didParseCell: (data) => {
+      if (data.column.index === 4 && data.section === "body") {
+        const v = data.cell.raw as string;
+        if (v === "ON DUTY")   data.cell.styles.textColor = BLUE;
+        else if (v === "ON LEAVE") data.cell.styles.textColor = AMBER;
+        else                    data.cell.styles.textColor = GREEN;
+      }
+    },
+  });
+
+  // ── Footer ────────────────────────────────────────────────────────────────
+  const totalPages = (doc.internal as unknown as { getNumberOfPages: () => number }).getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    doc.setFillColor(...NAVY);
+    doc.rect(0, pageHeight - 10, pageWidth, 10, "F");
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...WHITE);
+    doc.text(
+      `AYODHYA POLICE LINE — DAILY ATTENDANCE SUMMARY — ${format(now, "dd MMM yyyy")} | Page ${p} of ${totalPages}`,
+      pageWidth / 2, pageHeight - 4, { align: "center" },
+    );
+  }
+
+  doc.save(`AyodhyaPolice_Attendance_${format(now, "yyyyMMdd_HHmm")}.pdf`);
 }

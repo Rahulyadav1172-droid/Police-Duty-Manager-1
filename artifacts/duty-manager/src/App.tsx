@@ -16,6 +16,7 @@ import HandoverReport from "@/pages/handover";
 import MusterRoll from "@/pages/muster";
 import TransferReceipt from "@/pages/transfer";
 import LeaveManagement from "@/pages/leave";
+import AttendanceSummary from "@/pages/attendance";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ function Router() {
         <Route path="/muster" component={MusterRoll} />
         <Route path="/transfer" component={TransferReceipt} />
         <Route path="/leave" component={LeaveManagement} />
+        <Route path="/attendance" component={AttendanceSummary} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
