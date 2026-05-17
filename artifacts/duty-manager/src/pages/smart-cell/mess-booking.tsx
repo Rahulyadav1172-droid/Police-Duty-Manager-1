@@ -114,146 +114,207 @@ function printLetter(b: Booking) {
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap"/>
 <style>
-  @page { size: A4 portrait; margin: 12mm 18mm 12mm 22mm; }
+  @page { size: A4 portrait; margin: 0; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body {
-    font-family: 'Noto Sans Devanagari', Arial, sans-serif;
-    font-size: 11pt;
-    line-height: 1.55;
-    color: #111;
-    background: #fff;
-    width: 100%;
-    height: 100%;
-  }
+  html, body { width: 210mm; min-height: 297mm; background: #fff; }
+
   .page {
+    font-family: 'Noto Sans Devanagari', Arial, sans-serif;
+    font-size: 11.5pt;
+    line-height: 1.7;
+    color: #111;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    min-height: 100%;
   }
-  .content { flex: 1; }
 
-  /* Header */
+  /* ── Top decorative border strip ── */
+  .top-border {
+    height: 7px;
+    background: linear-gradient(to right, #0f2859 0%, #1a4a9e 40%, #c8960c 40%, #c8960c 60%, #0f2859 60%, #0f2859 100%);
+    flex-shrink: 0;
+  }
+
+  /* ── Blue header ── */
   .header-bar {
     background: #0f2859;
     color: #fff;
     text-align: center;
-    padding: 7px 14px;
-    margin-bottom: 10px;
-    border-radius: 3px;
+    padding: 9px 20px 8px;
+    flex-shrink: 0;
   }
-  .header-bar h1 { font-size: 13pt; font-weight: 700; letter-spacing: .5px; }
-  .header-bar p  { font-size: 9pt; margin-top: 1px; opacity: .85; }
+  .header-bar h1 { font-size: 13.5pt; font-weight: 700; letter-spacing: .5px; }
+  .header-bar p  { font-size: 9.5pt; margin-top: 2px; opacity: .85; }
+
+  /* ── Bottom decorative border strip ── */
+  .header-border {
+    height: 4px;
+    background: linear-gradient(to right, #c8960c, #f0c040, #c8960c);
+    flex-shrink: 0;
+  }
+
+  /* ── Letter body ── */
+  .letter {
+    flex: 1;
+    padding: 10mm 22mm 8mm 25mm;
+    display: flex;
+    flex-direction: column;
+  }
+  .letter-content { flex: 1; }
 
   /* Ref row */
   .ref-row {
     display: flex;
     justify-content: space-between;
     font-size: 10pt;
-    margin-bottom: 10px;
+    margin-bottom: 9px;
     padding-bottom: 5px;
-    border-bottom: 1px solid #ccc;
-    color: #333;
+    border-bottom: 1.5px solid #0f2859;
+    color: #222;
   }
 
-  /* Sections */
-  .to-block      { margin-bottom: 8px; }
-  .to-block .name { font-weight: 700; }
-  .subject-block { margin-bottom: 8px; }
-  .subject-block .subj-label { font-weight: 700; text-decoration: underline; }
-  .body-para     { text-indent: 2em; margin-bottom: 8px; text-align: justify; }
+  /* To block */
+  .to-block { margin-bottom: 7px; line-height: 1.65; }
+  .to-block .lbl { }
+  .to-block .name { font-weight: 700; padding-left: 1.8em; }
+  .to-block .mob  { padding-left: 1.8em; }
 
-  /* Booking detail table */
-  .detail-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 10.5pt; }
-  .detail-table td { padding: 3px 6px; vertical-align: top; }
-  .detail-table td:first-child { font-weight: 600; white-space: nowrap; width: 46%; }
-  .detail-table tr:nth-child(even) td { background: #f5f7fa; }
+  /* Subject */
+  .subject-block { margin-bottom: 7px; }
+  .subj-label { font-weight: 700; text-decoration: underline; }
 
-  .contact-line  { margin-bottom: 6px; font-size: 10.5pt; }
-  .welcome-line  { margin-bottom: 10px; font-size: 10.5pt; font-style: italic; }
+  /* Body paragraph */
+  .body-para { margin-bottom: 7px; text-align: justify; }
 
-  /* Signature — centred */
+  /* Booking list */
+  .booking-title { font-weight: 700; margin-bottom: 3px; }
+  .booking-list  { list-style: none; padding-left: 2.5em; margin-bottom: 9px; }
+  .booking-list li { position: relative; padding-left: .4em; line-height: 1.65; }
+  .booking-list li::before { content: "·"; position: absolute; left: -1em; font-weight: 700; font-size: 14pt; line-height: 1.4; }
+
+  /* Contact & welcome */
+  .contact-line { margin-bottom: 5px; }
+  .welcome-line { margin-bottom: 0; }
+
+  /* Signature — right-aligned */
   .sign-block {
-    text-align: center;
-    margin-top: 12px;
-    margin-bottom: 10px;
-    line-height: 1.6;
+    text-align: right;
+    padding-right: 6mm;
+    margin-top: 14px;
+    margin-bottom: 14px;
+    line-height: 1.65;
   }
-  .sign-block .sign-gap {
-    display: block;
-    height: 22px;
-  }
-  .sign-block .cmd { font-weight: 700; font-size: 11.5pt; }
+  .sign-block .cmd { font-weight: 700; }
 
-  /* Copy */
+  /* Pratialipi */
   .copy-block {
-    border-top: 1px solid #555;
-    padding-top: 7px;
-    font-size: 10pt;
+    border-top: 1px solid #444;
+    padding-top: 6px;
+    font-size: 10.5pt;
+    line-height: 1.6;
+    text-align: justify;
+  }
+
+  /* ── Bottom gold bar ── */
+  .bottom-border {
+    height: 7px;
+    background: linear-gradient(to right, #0f2859 0%, #1a4a9e 40%, #c8960c 40%, #c8960c 60%, #0f2859 60%, #0f2859 100%);
+    flex-shrink: 0;
+    margin-top: auto;
   }
 </style>
 </head>
 <body>
 <div class="page">
-  <div class="content">
 
-    <div class="header-bar">
-      <h1>पुलिस ऑफिसर्स गेस्ट हाउस — अयोध्या पुलिस लाइन</h1>
-      <p>उत्तर प्रदेश पुलिस &nbsp;|&nbsp; Ayodhya Police Line, Uttar Pradesh</p>
-    </div>
+  <!-- Top decorative strip -->
+  <div class="top-border"></div>
 
-    <div class="ref-row">
-      <span>सं0 / Ref. No.: <strong>${b.refNo}</strong></span>
-      <span>दिनांक / Date: <strong>${bookingDateStr}</strong></span>
-    </div>
-
-    <div class="to-block">
-      <div>सेवा में,</div>
-      <div class="name">&nbsp;&nbsp;श्री ${b.guestName}</div>
-      <div>&nbsp;&nbsp;मो0नं0- +91 ${b.mobile}</div>
-    </div>
-
-    <div class="subject-block">
-      <span class="subj-label">विषयः</span>&nbsp;
-      पुलिस आफिसर्स गेस्ट हाउस में सूट आरक्षित किये जाने की पुष्टि के संबंध में ।
-    </div>
-
-    <div class="body-para">
-      महोदय,<br/>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;उपरोक्त विषयक अवगत कराना है कि पुलिस ऑफिसर्स गेस्ट हाउस में दिनांक <strong>${bookingDateStr}</strong> को आपके प्रवास हेतु <strong>${roomCount} रूम</strong> आरक्षित कर दिया गया है, जिसका विवरण निम्नवत हैः-
-    </div>
-
-    <table class="detail-table">
-      <tr><td>गेस्ट का नाम</td><td>श्री ${b.guestName}</td></tr>
-      <tr><td>कब से कब तक</td><td>दि0 ${checkInStr} से दि0 ${checkOutStr}</td></tr>
-      <tr><td>रूम की संख्या</td><td>${roomCount}</td></tr>
-      <tr><td>सूट नम्बर</td><td>${suitesStr}</td></tr>
-      <tr><td>चेक-इन / चेक-आउट</td><td>${checkInStr} ${checkInTimeStr} &nbsp;/&nbsp; ${checkOutStr} ${checkOutTimeStr}</td></tr>
-      <tr><td>कुल दिन</td><td>${b.totalDays}</td></tr>
-      <tr><td>प्रति रूम प्रति दिन किराया</td><td>₹${b.rentPerDay.toLocaleString("en-IN")}/-</td></tr>
-      <tr><td>फूड चार्ज</td><td>${foodLine}${b.foodApplicable === "yes" && b.foodCharge ? `  (₹${b.foodCharge.toLocaleString("en-IN")}/-)` : ""}</td></tr>
-    </table>
-
-    <div class="contact-line">
-      <strong>सम्पर्क सूत्र ऑफिसर्स गेस्ट हाउस</strong> — उ0नि0 यदुनाथ &nbsp; मो0न0-8317041684
-    </div>
-
-    <div class="welcome-line">
-      हम आपके स्वागत के लिए उत्सुक हैं और आशा करते हैं कि आपका प्रवास सुखद रहेगा ।
-    </div>
-
-  </div><!-- /content -->
-
-  <div class="sign-block">
-    <span class="sign-gap"></span>
-    <div>आज्ञा से</div>
-    <span class="sign-gap"></span>
-    <div class="cmd">वरिष्ठ पुलिस अधीक्षक</div>
-    <div>अयोध्या</div>
+  <!-- Blue header (kept from existing) -->
+  <div class="header-bar">
+    <h1>पुलिस ऑफिसर्स गेस्ट हाउस — अयोध्या पुलिस लाइन</h1>
+    <p>उत्तर प्रदेश पुलिस &nbsp;|&nbsp; Ayodhya Police Line, Uttar Pradesh</p>
   </div>
 
-  <div class="copy-block">
-    <strong>प्रतिलिपिः</strong> प्रभारी पुलिस ऑफिसर्स गेस्ट हाउस, पुलिस लाइन, अयोध्या — संबंधित से समन्वय स्थापित करते हुए आवश्यक कार्यवाही करें ।
-  </div>
+  <!-- Gold accent line under header -->
+  <div class="header-border"></div>
+
+  <!-- Letter body -->
+  <div class="letter">
+    <div class="letter-content">
+
+      <!-- Ref / Date -->
+      <div class="ref-row">
+        <span>सं0 / Ref. No.: <strong>${b.refNo}</strong></span>
+        <span>दिनांक / Date: <strong>${bookingDateStr}</strong></span>
+      </div>
+
+      <!-- To block -->
+      <div class="to-block">
+        <div class="lbl">सेवा में,</div>
+        <div class="name">श्री ${b.guestName}</div>
+        <div class="mob">मो0नं0- +91 ${b.mobile}</div>
+      </div>
+
+      <!-- Subject -->
+      <div class="subject-block">
+        <span class="subj-label">विषयः</span>&nbsp;
+        पुलिस आफिसर्स गेस्ट हाउस में सूट आरक्षित किये जाने की पुष्टि के संबंध में ।
+      </div>
+
+      <!-- Body paragraph -->
+      <div class="body-para">
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;महोदय,<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;अवगत कराना है कि पुलिस ऑफिसर्स गेस्ट हाउस में दिनांक <strong>${bookingDateStr}</strong> को आपके प्रवास हेतु <strong>${roomCount} रूम</strong> आरक्षित कर दिया गया है, जिसका विवरण निम्नवत हैः-
+      </div>
+
+      <!-- Booking details (bullet list — matches PDF) -->
+      <div class="booking-title">बुकिंग विवरणः</div>
+      <ul class="booking-list">
+        <li>गेस्ट का नामः &nbsp;${b.guestName}</li>
+        <li>कब से कब तकः &nbsp;दि0 ${checkInStr} से दि0 ${checkOutStr}</li>
+        <li>रूम की संख्याः &nbsp;${roomCount}</li>
+        <li>सूट नम्बरः &nbsp;${suitesStr}</li>
+        <li>चेक-इन/चेक-आउट की तिथि: &nbsp;${checkInStr} समय : ${checkInTimeStr} / ${checkOutStr} समय : ${checkOutTimeStr}</li>
+        <li>कुल दिनः &nbsp;${b.totalDays}</li>
+        <li>प्रति रूम प्रति दिन किरायाः &nbsp;₹${b.rentPerDay.toLocaleString("en-IN")}/-</li>
+        ${b.foodApplicable === "yes" ? `<li>फूड चार्जः &nbsp;Applicable${b.foodCharge ? ` (₹${b.foodCharge.toLocaleString("en-IN")}/-)` : ""}</li>` : ""}
+      </ul>
+
+      <!-- Contact -->
+      <div class="contact-line">
+        <strong>सम्पर्क सूत्र ऑफिसर्स गेस्ट हाउस</strong>- उ0नि0 यदुनाथ &nbsp; मो0न0-8317041684
+      </div>
+
+      <!-- Welcome -->
+      <div class="welcome-line">
+        हम आपके स्वागत के लिए उत्सुक हैं और आशा करते हैं कि आपका प्रवास सुखद रहेगा ।
+      </div>
+
+    </div><!-- /letter-content -->
+
+    <!-- Signature (right-aligned, matching PDF) -->
+    <div class="sign-block">
+      <div>&nbsp;</div>
+      <div>&nbsp;</div>
+      <div>आज्ञा से</div>
+      <div>&nbsp;</div>
+      <div>&nbsp;</div>
+      <div class="cmd">वरिष्ठ पुलिस अधीक्षक</div>
+      <div>अयोध्या</div>
+    </div>
+
+    <!-- Pratialipi -->
+    <div class="copy-block">
+      <strong>प्रतिलिपिः</strong> प्रभारी पुलिस ऑफिसर्स गेस्ट हाउस, पुलिस लाइन, अयोध्या संबंधित से समन्वय स्थापित करते हुए आवश्यक कार्यवाही करें ।
+    </div>
+
+  </div><!-- /letter -->
+
+  <!-- Bottom decorative strip -->
+  <div class="bottom-border"></div>
 
 </div><!-- /page -->
 <script>window.onload=function(){setTimeout(function(){window.print();},900);};</script>
