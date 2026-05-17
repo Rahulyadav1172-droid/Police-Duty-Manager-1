@@ -171,7 +171,7 @@ export default function MusterRoll() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-              <Clock className="w-3 h-3" /> Parade Date &amp; Time
+              <Clock className="w-3 h-3" /> रात्रि गणना
             </Label>
             <Input
               type="datetime-local"
