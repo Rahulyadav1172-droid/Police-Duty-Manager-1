@@ -99,7 +99,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </button>
         </div>
       </div>
-
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 max-h-screen overflow-hidden">
         <header className="h-16 flex items-center justify-between px-8 border-b bg-card">
@@ -115,16 +114,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 className="pl-9 pr-4 py-2 bg-muted/50 border-none rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary w-64"
               />
             </div>
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-              OC
-            </div>
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">AP</div>
           </div>
         </header>
         <main className="flex-1 overflow-auto p-4 md:p-8 bg-muted/20">
           {children}
         </main>
       </div>
-
       {/* Change Password Dialog */}
       <Dialog open={changePassOpen} onOpenChange={setChangePassOpen}>
         <DialogContent className="max-w-sm">
