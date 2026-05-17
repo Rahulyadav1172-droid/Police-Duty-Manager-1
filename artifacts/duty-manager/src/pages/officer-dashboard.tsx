@@ -93,7 +93,7 @@ export default function OfficerDashboard() {
             </div>
             <div>
               <h1 className="font-extrabold text-lg leading-tight uppercase tracking-wide">Duty Manager</h1>
-              <p className="text-blue-300 text-xs uppercase tracking-widest font-semibold">Ayodhya Police Line — Senior Officer Dashbaord</p>
+              <p className="text-blue-300 text-xs uppercase tracking-widest font-semibold">Ayodhya Police Line — Senior Officer Dashboard</p>
             </div>
           </div>
 
