@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { Layout } from "@/components/layout";
 import LoginPage from "@/pages/login";
+import OfficerDashboard from "@/pages/officer-dashboard";
 import { AuthContext, useAuthState, useAuth } from "@/hooks/use-auth";
 
 import LiveBoard from "@/pages/live-board";
@@ -21,14 +22,7 @@ import BiometricAttendance from "@/pages/biometric";
 
 const queryClient = new QueryClient();
 
-function AdminRoute({ component: Component }: { component: React.ComponentType }) {
-  const { role } = useAuth();
-  if (role !== "admin") return <Redirect to="/" />;
-  return <Component />;
-}
-
-function Router() {
-  const { role } = useAuth();
+function AdminRouter() {
   return (
     <Layout>
       <Switch>
@@ -40,22 +34,19 @@ function Router() {
         <Route path="/leave" component={LeaveManagement} />
         <Route path="/attendance" component={AttendanceSummary} />
         <Route path="/biometric" component={BiometricAttendance} />
-
-        {/* Admin-only routes */}
-        <Route path="/assign">
-          {role === "admin" ? <AssignDuty /> : <Redirect to="/" />}
-        </Route>
-        <Route path="/personnel">
-          {role === "admin" ? <PersonnelManagement /> : <Redirect to="/" />}
-        </Route>
-        <Route path="/duty-points">
-          {role === "admin" ? <DutyPointsManagement /> : <Redirect to="/" />}
-        </Route>
-
+        <Route path="/assign" component={AssignDuty} />
+        <Route path="/personnel" component={PersonnelManagement} />
+        <Route path="/duty-points" component={DutyPointsManagement} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
   );
+}
+
+function AppContent() {
+  const { role } = useAuth();
+  if (role === "officer") return <OfficerDashboard />;
+  return <AdminRouter />;
 }
 
 function AppInner() {
@@ -63,7 +54,7 @@ function AppInner() {
 
   return (
     <AuthContext.Provider value={auth}>
-      {auth.isAuthenticated ? <Router /> : <LoginPage />}
+      {auth.isAuthenticated ? <AppContent /> : <LoginPage />}
     </AuthContext.Provider>
   );
 }
