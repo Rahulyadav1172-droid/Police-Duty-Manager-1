@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { format, differenceInMinutes, differenceInHours } from "date-fns";
-import { ShieldAlert, MapPin, Search, Clock, Users, ArrowRightCircle, LogOut, CalendarCheck } from "lucide-react";
+import {
+  ShieldAlert, MapPin, Search, Clock, Users,
+  ArrowRightCircle, LogOut, CalendarCheck, CalendarOff,
+} from "lucide-react";
 import {
   useGetLiveBoard,
   getGetLiveBoardQueryKey,
   useGetRosterStats,
   useReleaseFromDuty,
+  useGetActiveLeavesToday,
 } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +20,21 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { RankBadge } from "@/components/rank-badge";
 
-type ViewFilter = "all" | "on-duty" | "available";
+type ViewFilter = "all" | "on-duty" | "available" | "on-leave";
+
+const LEAVE_TYPE_LABELS: Record<string, string> = {
+  sick_leave:    "Sick Leave",
+  earned_leave:  "Earned Leave",
+  casual_leave:  "Casual Leave",
+  absent:        "Absent",
+};
+
+const LEAVE_TYPE_COLORS: Record<string, string> = {
+  sick_leave:    "bg-red-100 text-red-800 border-red-200",
+  earned_leave:  "bg-blue-100 text-blue-800 border-blue-200",
+  casual_leave:  "bg-purple-100 text-purple-800 border-purple-200",
+  absent:        "bg-gray-100 text-gray-800 border-gray-200",
+};
 
 function TimeRemaining({ endDateTime }: { endDateTime: string }) {
   const end = new Date(endDateTime);
@@ -31,8 +49,8 @@ function TimeRemaining({ endDateTime }: { endDateTime: string }) {
 export default function LiveBoard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm]   = useState("");
-  const [viewFilter, setViewFilter]   = useState<ViewFilter>("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [viewFilter, setViewFilter] = useState<ViewFilter>("all");
 
   const { data: liveBoard, isLoading: isLiveBoardLoading } = useGetLiveBoard({
     query: {
@@ -48,6 +66,13 @@ export default function LiveBoard() {
     },
   });
 
+  const { data: leaveToday = [], isLoading: isLeaveLoading } = useGetActiveLeavesToday({
+    query: {
+      queryKey: ["getActiveLeavesToday"],
+      refetchInterval: 30000,
+    },
+  });
+
   const releaseMutation = useReleaseFromDuty({
     mutation: {
       onSuccess: () => {
@@ -58,6 +83,12 @@ export default function LiveBoard() {
     },
   });
 
+  // Build a set of personnel IDs on leave today
+  const onLeaveIds = useMemo(
+    () => new Set(leaveToday.map((l) => l.personnelId)),
+    [leaveToday],
+  );
+
   const q = searchTerm.toLowerCase();
 
   const filteredOnDuty = (liveBoard?.onDuty ?? []).filter((entry) =>
@@ -67,20 +98,37 @@ export default function LiveBoard() {
     entry.dutyPoint?.name.toLowerCase().includes(q),
   );
 
-  const filteredAvailable = (liveBoard?.available ?? []).filter((person) =>
+  // Filter people on leave OUT of the available list
+  const filteredAvailable = (liveBoard?.available ?? [])
+    .filter((person) => !onLeaveIds.has(person.id))
+    .filter((person) =>
+      !q ||
+      person.name.toLowerCase().includes(q) ||
+      person.beltNumber.toLowerCase().includes(q) ||
+      person.rank.toLowerCase().includes(q),
+    );
+
+  const filteredOnLeave = leaveToday.filter((leave) =>
     !q ||
-    person.name.toLowerCase().includes(q) ||
-    person.beltNumber.toLowerCase().includes(q) ||
-    person.rank.toLowerCase().includes(q),
+    leave.personnel?.name.toLowerCase().includes(q) ||
+    (leave.personnel as { beltNumber?: string } | undefined)?.beltNumber?.toLowerCase().includes(q) ||
+    LEAVE_TYPE_LABELS[leave.leaveType]?.toLowerCase().includes(q),
   );
+
+  const isLoading = isLiveBoardLoading || isLeaveLoading;
 
   const showOnDuty    = viewFilter === "all" || viewFilter === "on-duty";
   const showAvailable = viewFilter === "all" || viewFilter === "available";
+  const showOnLeave   = viewFilter === "all" || viewFilter === "on-leave";
 
-  const FILTER_TABS: { value: ViewFilter; label: string; count?: number }[] = [
-    { value: "all",       label: "All Personnel",  count: (liveBoard?.onDuty.length ?? 0) + (liveBoard?.available.length ?? 0) },
-    { value: "on-duty",   label: "On Duty",        count: liveBoard?.onDuty.length ?? 0 },
-    { value: "available", label: "Available",      count: liveBoard?.available.length ?? 0 },
+  const onLeaveCount    = leaveToday.length;
+  const realAvailable   = (liveBoard?.available ?? []).filter(p => !onLeaveIds.has(p.id)).length;
+
+  const FILTER_TABS: { value: ViewFilter; label: string; count: number; color: string }[] = [
+    { value: "all",      label: "All",       count: (liveBoard?.onDuty.length ?? 0) + realAvailable + onLeaveCount, color: "bg-primary text-primary-foreground" },
+    { value: "on-duty",  label: "On Duty",   count: liveBoard?.onDuty.length ?? 0,  color: "bg-red-600 text-white" },
+    { value: "available",label: "Available", count: realAvailable,                   color: "bg-emerald-600 text-white" },
+    { value: "on-leave", label: "On Leave",  count: onLeaveCount,                   color: "bg-amber-500 text-white" },
   ];
 
   return (
@@ -144,7 +192,7 @@ export default function LiveBoard() {
           <CardContent className="p-6 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-emerald-200 uppercase tracking-wider">Available</p>
-              {isStatsLoading ? <Skeleton className="h-8 w-16 mt-2 bg-emerald-800" /> : <h3 className="text-3xl font-bold mt-1">{stats?.totalAvailable ?? 0}</h3>}
+              {isLoading ? <Skeleton className="h-8 w-16 mt-2 bg-emerald-800" /> : <h3 className="text-3xl font-bold mt-1">{realAvailable}</h3>}
             </div>
             <div className="w-12 h-12 rounded-full bg-emerald-800 flex items-center justify-center">
               <Clock className="w-6 h-6 text-emerald-200" />
@@ -152,21 +200,21 @@ export default function LiveBoard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card">
+        <Card className="bg-amber-700 text-white border-none">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Duty Points</p>
-              {isLiveBoardLoading ? <Skeleton className="h-8 w-16 mt-2" /> : <h3 className="text-3xl font-bold mt-1">{liveBoard?.totalDutyPoints ?? 0}</h3>}
+              <p className="text-xs font-semibold text-amber-100 uppercase tracking-wider">On Leave</p>
+              {isLeaveLoading ? <Skeleton className="h-8 w-16 mt-2 bg-amber-600" /> : <h3 className="text-3xl font-bold mt-1">{onLeaveCount}</h3>}
             </div>
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <MapPin className="w-6 h-6 text-primary" />
+            <div className="w-12 h-12 rounded-full bg-amber-600 flex items-center justify-center">
+              <CalendarOff className="w-6 h-6 text-amber-100" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* View Filter Tabs */}
-      <div className="flex items-center gap-2 border-b pb-0">
+      <div className="flex items-center gap-1 border-b pb-0 flex-wrap">
         {FILTER_TABS.map((tab) => (
           <button
             key={tab.value}
@@ -178,21 +226,23 @@ export default function LiveBoard() {
             }`}
           >
             {tab.label}
-            {tab.count !== undefined && (
-              <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${
-                viewFilter === tab.value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-              }`}>
-                {tab.count}
-              </span>
-            )}
+            <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${
+              viewFilter === tab.value ? tab.color : "bg-muted text-muted-foreground"
+            }`}>
+              {tab.count}
+            </span>
           </button>
         ))}
       </div>
 
       {/* Content */}
-      <div className={`grid gap-6 ${viewFilter === "all" ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"}`}>
+      <div className={`grid gap-6 ${
+        viewFilter === "all"
+          ? "grid-cols-1 lg:grid-cols-3"
+          : "grid-cols-1"
+      }`}>
 
-        {/* On Duty Column */}
+        {/* ── On Duty Column ─────────────────────────────────────────────── */}
         {showOnDuty && (
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b pb-2">
@@ -273,7 +323,7 @@ export default function LiveBoard() {
           </div>
         )}
 
-        {/* Available Column */}
+        {/* ── Available Column ───────────────────────────────────────────── */}
         {showAvailable && (
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b pb-2">
@@ -318,6 +368,75 @@ export default function LiveBoard() {
                     </CardContent>
                   </Card>
                 ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── On Leave Column ────────────────────────────────────────────── */}
+        {showOnLeave && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b pb-2">
+              <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-amber-500" />
+                ON LEAVE
+              </h2>
+              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 font-bold">
+                {filteredOnLeave.length} on leave
+              </Badge>
+            </div>
+
+            <div className={`space-y-3 ${viewFilter === "on-leave" ? "grid grid-cols-1 md:grid-cols-2 gap-3 space-y-0" : ""}`}>
+              {isLeaveLoading ? (
+                Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)
+              ) : filteredOnLeave.length === 0 ? (
+                <div className="text-center py-10 bg-card rounded-lg border border-dashed col-span-full">
+                  <p className="text-muted-foreground">
+                    {searchTerm ? `No leave matches for "${searchTerm}"` : "No personnel on leave today."}
+                  </p>
+                </div>
+              ) : (
+                filteredOnLeave.map((leave) => {
+                  const leaveBadge = LEAVE_TYPE_COLORS[leave.leaveType] ?? "bg-gray-100 text-gray-700 border-gray-200";
+                  const leaveLabel = LEAVE_TYPE_LABELS[leave.leaveType] ?? leave.leaveType;
+                  const personnel = leave.personnel as {
+                    id: number; name: string; beltNumber: string; rank: string;
+                  } | undefined;
+                  return (
+                    <Card key={leave.id} className="border-l-4 border-l-amber-500 hover:shadow-md transition-shadow">
+                      <CardContent className="p-4 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h4 className="font-bold text-sm">{personnel?.name ?? "—"}</h4>
+                            <span className="text-xs font-mono text-muted-foreground">PNO {personnel?.beltNumber}</span>
+                          </div>
+                          <Badge variant="outline" className={`text-[10px] uppercase shrink-0 ${leaveBadge}`}>
+                            {leaveLabel}
+                          </Badge>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <RankBadge rank={personnel?.rank ?? ""} />
+                        </div>
+
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <CalendarOff className="w-3.5 h-3.5 shrink-0" />
+                          <span>
+                            {format(new Date(leave.startDate), "dd MMM")}
+                            {" — "}
+                            {format(new Date(leave.endDate), "dd MMM yyyy")}
+                          </span>
+                        </div>
+
+                        {leave.reason && (
+                          <p className="text-xs text-muted-foreground italic border-t pt-1.5 mt-1 line-clamp-2">
+                            {leave.reason}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })
               )}
             </div>
           </div>
