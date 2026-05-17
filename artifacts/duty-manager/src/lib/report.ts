@@ -843,3 +843,263 @@ export function generateMusterRoll(opts: MusterOptions): void {
   const dateStr = format(now, "yyyyMMdd_HHmm");
   doc.save(`AyodhyaPolice_MusterRoll_${dateStr}.pdf`);
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TRANSFER RECEIPT
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type TransferReceiptData = {
+  // Personnel
+  name: string;
+  beltNumber: string;
+  rank: string;
+  mobileNumber?: string;
+  // Transfer details
+  transferFrom: string;
+  transferTo: string;
+  orderNumber: string;
+  orderDate: string;          // ISO date string
+  reportingDate: string;      // ISO date string
+  designationAtNewPost?: string;
+  remarks?: string;
+  // Issuing authority
+  issuingOfficerName?: string;
+  issuingOfficerRank?: string;
+};
+
+export function generateTransferReceipt(data: TransferReceiptData): void {
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const pageWidth  = doc.internal.pageSize.getWidth();   // 210
+  const pageHeight = doc.internal.pageSize.getHeight();  // 297
+  const now = new Date();
+
+  const NAVY       = [13,  27,  62]  as [number, number, number];
+  const GOLD       = [180, 140, 40]  as [number, number, number];
+  const LIGHT_BLUE = [232, 240, 254] as [number, number, number];
+  const WHITE      = [255, 255, 255] as [number, number, number];
+  const DARK_TEXT  = [20,  20,  20]  as [number, number, number];
+  const MID_GRAY   = [100, 100, 110] as [number, number, number];
+  const BORDER_GRAY= [200, 205, 215] as [number, number, number];
+
+  // Auto receipt number: TR-YYYYMMDD-XXXX
+  const receiptNo = `TR-${format(now, "yyyyMMdd")}-${String(Math.floor(1000 + Math.random() * 9000))}`;
+
+  // ── Header band ────────────────────────────────────────────────────────────
+  doc.setFillColor(...NAVY);
+  doc.rect(0, 0, pageWidth, 36, "F");
+
+  // Left emblem
+  doc.setFillColor(...LIGHT_BLUE);
+  doc.circle(20, 18, 11, "F");
+  doc.setFontSize(6.5);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...NAVY);
+  doc.text("UP",     20, 15.5, { align: "center" });
+  doc.text("POLICE", 20, 19.5, { align: "center" });
+  doc.text("",       20, 23,   { align: "center" });
+
+  // Right emblem
+  doc.setFillColor(...LIGHT_BLUE);
+  doc.circle(pageWidth - 20, 18, 11, "F");
+  doc.setFontSize(6.5);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...NAVY);
+  doc.text("UP",     pageWidth - 20, 15.5, { align: "center" });
+  doc.text("POLICE", pageWidth - 20, 19.5, { align: "center" });
+
+  // Title
+  doc.setTextColor(...WHITE);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.text("AYODHYA POLICE LINE", pageWidth / 2, 11, { align: "center" });
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text("Uttar Pradesh Police — Ayodhya District", pageWidth / 2, 18, { align: "center" });
+
+  // Gold divider + Hindi/English subtitle
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(0.6);
+  doc.line(40, 22, pageWidth - 40, 22);
+
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...GOLD);
+  doc.text("TRANSFER RECEIPT  /  STHANANTARAN PRAMAN PATRA", pageWidth / 2, 30, { align: "center" });
+
+  // ── Receipt meta row ───────────────────────────────────────────────────────
+  doc.setFillColor(...LIGHT_BLUE);
+  doc.rect(0, 36, pageWidth, 12, "F");
+
+  doc.setFontSize(8.5);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...NAVY);
+  doc.text(`Receipt No.: ${receiptNo}`, 12, 44);
+  doc.text(`Issued On: ${format(now, "dd MMM yyyy, HH:mm")}`, pageWidth / 2, 44, { align: "center" });
+  doc.text(`Order No.: ${data.orderNumber || "—"}`, pageWidth - 12, 44, { align: "right" });
+
+  // ── Section helper ─────────────────────────────────────────────────────────
+  let cursorY = 56;
+  const margin = 12;
+  const contentW = pageWidth - margin * 2;
+
+  function sectionHeader(title: string) {
+    doc.setFillColor(...NAVY);
+    doc.rect(margin, cursorY, contentW, 7, "F");
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...WHITE);
+    doc.text(title.toUpperCase(), margin + 4, cursorY + 5);
+    cursorY += 7;
+  }
+
+  function fieldRow(label: string, value: string, col2Label?: string, col2Value?: string) {
+    const rowH = 9;
+    // border
+    doc.setDrawColor(...BORDER_GRAY);
+    doc.setLineWidth(0.3);
+    doc.rect(margin, cursorY, contentW, rowH);
+    if (col2Label !== undefined) {
+      doc.line(margin + contentW / 2, cursorY, margin + contentW / 2, cursorY + rowH);
+    }
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.setTextColor(...MID_GRAY);
+    doc.text(label, margin + 3, cursorY + 3.5);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...DARK_TEXT);
+    doc.text(value || "—", margin + 3, cursorY + 7.5);
+
+    if (col2Label !== undefined) {
+      const col2X = margin + contentW / 2 + 3;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.setTextColor(...MID_GRAY);
+      doc.text(col2Label, col2X, cursorY + 3.5);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(...DARK_TEXT);
+      doc.text(col2Value || "—", col2X, cursorY + 7.5);
+    }
+
+    cursorY += rowH;
+  }
+
+  // ── Section 1: Personnel Details ───────────────────────────────────────────
+  sectionHeader("1. Personnel Details");
+  fieldRow("Full Name", data.name.toUpperCase(), "Belt / PNO Number", data.beltNumber.toUpperCase());
+  fieldRow("Rank", data.rank.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()), "Mobile Number", data.mobileNumber || "Not Provided");
+
+  cursorY += 4;
+
+  // ── Section 2: Transfer Details ────────────────────────────────────────────
+  sectionHeader("2. Transfer Details");
+  fieldRow("Transfer From", data.transferFrom, "Transfer To", data.transferTo);
+  fieldRow(
+    "Date of Transfer Order",
+    data.orderDate ? format(new Date(data.orderDate), "dd MMMM yyyy") : "—",
+    "Date of Reporting at New Post",
+    data.reportingDate ? format(new Date(data.reportingDate), "dd MMMM yyyy") : "—",
+  );
+  if (data.designationAtNewPost) {
+    fieldRow("Designation / Post at New Station", data.designationAtNewPost);
+  }
+
+  cursorY += 4;
+
+  // ── Section 3: Remarks ─────────────────────────────────────────────────────
+  sectionHeader("3. Remarks / Additional Notes");
+  const remarkH = 18;
+  doc.setDrawColor(...BORDER_GRAY);
+  doc.setLineWidth(0.3);
+  doc.rect(margin, cursorY, contentW, remarkH);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...DARK_TEXT);
+  const remarkText = data.remarks?.trim() || "No additional remarks.";
+  const remarkLines = doc.splitTextToSize(remarkText, contentW - 6);
+  doc.text(remarkLines, margin + 3, cursorY + 5);
+  cursorY += remarkH + 6;
+
+  // ── Certification paragraph ─────────────────────────────────────────────────
+  doc.setFillColor(245, 247, 250);
+  doc.rect(margin, cursorY, contentW, 22, "F");
+  doc.setDrawColor(...BORDER_GRAY);
+  doc.setLineWidth(0.3);
+  doc.rect(margin, cursorY, contentW, 22);
+
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...DARK_TEXT);
+  const certText =
+    `This is to certify that ${data.rank.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())} ` +
+    `${data.name.toUpperCase()} (Belt No. ${data.beltNumber.toUpperCase()}) has been duly transferred from ` +
+    `${data.transferFrom} to ${data.transferTo} vide Order No. ${data.orderNumber || "—"} ` +
+    `dated ${data.orderDate ? format(new Date(data.orderDate), "dd MMMM yyyy") : "—"}. ` +
+    `He / She is hereby relieved of all duties and responsibilities at this unit with effect from the date of this receipt. ` +
+    `The receiving office is requested to acknowledge the joining of the above personnel.`;
+  const certLines = doc.splitTextToSize(certText, contentW - 8);
+  doc.text(certLines, margin + 4, cursorY + 6);
+  cursorY += 22 + 10;
+
+  // ── Signature blocks ────────────────────────────────────────────────────────
+  const sigW = (contentW - 10) / 3;
+  const sigH = 28;
+  const sigBoxes = [
+    { label: "ISSUING OFFICER", name: data.issuingOfficerName, rank: data.issuingOfficerRank },
+    { label: "COMMANDING OFFICER", name: "Police Line, Ayodhya", rank: "" },
+    { label: "RECEIVING OFFICE STAMP", name: "", rank: "" },
+  ];
+
+  sigBoxes.forEach((box, i) => {
+    const x = margin + i * (sigW + 5);
+    doc.setDrawColor(...BORDER_GRAY);
+    doc.setLineWidth(0.3);
+    doc.rect(x, cursorY, sigW, sigH);
+
+    // signature line
+    doc.setDrawColor(...MID_GRAY);
+    doc.setLineWidth(0.4);
+    doc.line(x + 6, cursorY + sigH - 14, x + sigW - 6, cursorY + sigH - 14);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.setTextColor(...NAVY);
+    doc.text(box.label, x + sigW / 2, cursorY + sigH - 10, { align: "center" });
+
+    if (box.name) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(...DARK_TEXT);
+      doc.text(box.name, x + sigW / 2, cursorY + sigH - 6, { align: "center" });
+    }
+    if (box.rank) {
+      doc.setFontSize(7);
+      doc.setTextColor(...MID_GRAY);
+      doc.text(box.rank, x + sigW / 2, cursorY + sigH - 2, { align: "center" });
+    }
+  });
+
+  cursorY += sigH + 6;
+
+  // ── Footer ──────────────────────────────────────────────────────────────────
+  doc.setFillColor(...NAVY);
+  doc.rect(0, pageHeight - 10, pageWidth, 10, "F");
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(...WHITE);
+  doc.text(
+    `CONFIDENTIAL — AYODHYA POLICE LINE | Receipt No.: ${receiptNo} | ${format(now, "dd MMM yyyy HH:mm")}`,
+    pageWidth / 2,
+    pageHeight - 4,
+    { align: "center" },
+  );
+
+  // ── Save ────────────────────────────────────────────────────────────────────
+  const safeName = data.name.replace(/\s+/g, "_").toUpperCase();
+  doc.save(`AyodhyaPolice_TransferReceipt_${safeName}_${format(now, "yyyyMMdd")}.pdf`);
+}
