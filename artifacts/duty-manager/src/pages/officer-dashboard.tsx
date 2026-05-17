@@ -84,7 +84,6 @@ export default function OfficerDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-
       {/* Header */}
       <header className="bg-gradient-to-r from-slate-900 to-blue-950 text-white px-6 py-4 shadow-lg">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
@@ -94,7 +93,7 @@ export default function OfficerDashboard() {
             </div>
             <div>
               <h1 className="font-extrabold text-lg leading-tight uppercase tracking-wide">Duty Manager</h1>
-              <p className="text-blue-300 text-xs uppercase tracking-widest font-semibold">Ayodhya Police Line — Senior Officer View</p>
+              <p className="text-blue-300 text-xs uppercase tracking-widest font-semibold">Ayodhya Police Line — Senior Officer Dashbaord</p>
             </div>
           </div>
 
@@ -113,7 +112,6 @@ export default function OfficerDashboard() {
           </div>
         </div>
       </header>
-
       {/* Body */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 space-y-6">
 
