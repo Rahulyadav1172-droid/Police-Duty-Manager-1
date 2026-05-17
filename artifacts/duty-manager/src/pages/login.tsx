@@ -187,7 +187,7 @@ export default function LoginPage() {
               }`}
               disabled={isLoading || !password}
             >
-              {isLoading ? "Signing in…" : `Sign In as ${isAdmin ? "Admin" : "Senior Officer"}`}
+              {isLoading ? "Signing in…" : "Sign In"}
             </Button>
           </form>
 
