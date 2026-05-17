@@ -267,7 +267,7 @@ export default function MusterRoll() {
                 <tr className="bg-primary text-primary-foreground text-xs uppercase">
                   <th className="px-3 py-2.5 text-center w-10">S.No</th>
                   <th className="px-3 py-2.5 text-left">Name</th>
-                  <th className="px-3 py-2.5 text-center">Belt No.</th>
+                  <th className="px-3 py-2.5 text-center">PNO No.</th>
                   <th className="px-3 py-2.5 text-left">Rank</th>
                   <th className="px-3 py-2.5 text-center">Status</th>
                   <th className="px-3 py-2.5 text-left">Duty Post</th>

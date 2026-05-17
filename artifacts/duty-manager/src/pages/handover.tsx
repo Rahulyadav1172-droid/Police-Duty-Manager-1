@@ -98,7 +98,7 @@ function OfficerPanel({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Belt No.</Label>
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">PNO No.</Label>
             <Input
               value={officer.beltNumber ?? ""}
               onChange={(e) => onChange({ ...officer, beltNumber: e.target.value, _personnelId: "__manual__" })}

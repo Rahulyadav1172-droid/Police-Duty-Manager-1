@@ -138,7 +138,7 @@ export function generateShiftReport({ entries, statusFilter = "all", title }: Re
 
   autoTable(doc, {
     startY: 46,
-    head: [["S.No", "Personnel Name", "Belt No.", "Rank", "Duty Point", "Location", "Type", "Start Time", "End Time", "Status"]],
+    head: [["S.No", "Personnel Name", "PNO No.", "Rank", "Duty Point", "Location", "Type", "Start Time", "End Time", "Status"]],
     body: rows,
     styles: {
       fontSize: 7.5,
@@ -333,7 +333,7 @@ export function generateHandoverReport(opts: HandoverOptions): void {
   if (outgoing.beltNumber) {
     doc.setFontSize(8);
     doc.setFont("courier", "normal");
-    doc.text(`Belt: ${outgoing.beltNumber}`, colPad + 5, topY + 30);
+    doc.text(`PNO: ${outgoing.beltNumber}`, colPad + 5, topY + 30);
   }
   if (outgoing.remarks) {
     doc.setFontSize(7.5);
@@ -366,7 +366,7 @@ export function generateHandoverReport(opts: HandoverOptions): void {
   if (incoming.beltNumber) {
     doc.setFontSize(8);
     doc.setFont("courier", "normal");
-    doc.text(`Belt: ${incoming.beltNumber}`, rightX + 5, topY + 30);
+    doc.text(`PNO: ${incoming.beltNumber}`, rightX + 5, topY + 30);
   }
   if (incoming.remarks) {
     doc.setFontSize(7.5);
@@ -407,7 +407,7 @@ export function generateHandoverReport(opts: HandoverOptions): void {
 
   autoTable(doc, {
     startY: tableStartY + 4,
-    head: [["#", "Personnel Name", "Belt No.", "Rank", "Duty Point", "Location", "Type", "Start Time", "End Time"]],
+    head: [["#", "Personnel Name", "PNO No.", "Rank", "Duty Point", "Location", "Type", "Start Time", "End Time"]],
     body: rows,
     styles: {
       fontSize: 8,
@@ -722,7 +722,7 @@ export function generateMusterRoll(opts: MusterOptions): void {
 
   autoTable(doc, {
     startY: 70,
-    head: [["S.No", "Name", "Belt No.", "Rank", "Status", "Duty Post", "Type", "Start", "End", "Signature"]],
+    head: [["S.No", "Name", "PNO No.", "Rank", "Status", "Duty Post", "Type", "Start", "End", "Signature"]],
     body: rows,
     styles: {
       fontSize: 7.5,
@@ -991,7 +991,7 @@ export function generateTransferReceipt(data: TransferReceiptData): void {
 
   // ── Section 1: Personnel Details ───────────────────────────────────────────
   sectionHeader("1. Personnel Details");
-  fieldRow("Full Name", data.name.toUpperCase(), "Belt / PNO Number", data.beltNumber.toUpperCase());
+  fieldRow("Full Name", data.name.toUpperCase(), "PNO Number", data.beltNumber.toUpperCase());
   fieldRow("Rank", data.rank.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()), "Mobile Number", data.mobileNumber || "Not Provided");
 
   cursorY += 4;
@@ -1037,7 +1037,7 @@ export function generateTransferReceipt(data: TransferReceiptData): void {
   doc.setTextColor(...DARK_TEXT);
   const certText =
     `This is to certify that ${data.rank.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())} ` +
-    `${data.name.toUpperCase()} (Belt No. ${data.beltNumber.toUpperCase()}) has been duly transferred from ` +
+    `${data.name.toUpperCase()} (PNO ${data.beltNumber.toUpperCase()}) has been duly transferred from ` +
     `${data.transferFrom} to ${data.transferTo} vide Order No. ${data.orderNumber || "—"} ` +
     `dated ${data.orderDate ? format(new Date(data.orderDate), "dd MMMM yyyy") : "—"}. ` +
     `He / She is hereby relieved of all duties and responsibilities at this unit with effect from the date of this receipt. ` +

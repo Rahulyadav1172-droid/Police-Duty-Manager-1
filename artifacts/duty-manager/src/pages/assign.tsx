@@ -142,7 +142,7 @@ export default function AssignDuty() {
                             value={field.value ? String(field.value) : undefined}
                             onChange={(val) => field.onChange(parseInt(val))}
                             placeholder="Search by name or belt no."
-                            searchPlaceholder="Type name or belt number…"
+                            searchPlaceholder="Type name or PNO number…"
                             emptyText="No personnel found."
                           />
                         </FormControl>

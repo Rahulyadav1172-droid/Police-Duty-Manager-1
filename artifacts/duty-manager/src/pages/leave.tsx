@@ -259,7 +259,7 @@ export default function LeaveManagement() {
         <div className="relative flex-1">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by name or belt number…"
+            placeholder="Search by name or PNO number…"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9"
@@ -371,7 +371,7 @@ export default function LeaveManagement() {
                       value={field.value ? String(field.value) : undefined}
                       onChange={(v) => field.onChange(parseInt(v))}
                       placeholder="Search by name or belt no."
-                      searchPlaceholder="Type name or belt number…"
+                      searchPlaceholder="Type name or PNO number…"
                     />
                   </FormControl>
                   <FormMessage />

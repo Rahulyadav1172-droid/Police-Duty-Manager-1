@@ -30,7 +30,7 @@ import { ExcelUploadDialog, type ColumnDef } from "@/components/excel-upload-dia
 
 const personnelSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  beltNumber: z.string().min(1, "Belt number is required"),
+  beltNumber: z.string().min(1, "PNO number is required"),
   mobileNumber: z.string().min(10, "Valid mobile number is required"),
   rank: z.enum([PersonnelRank.Constable, PersonnelRank.Head_Constable, PersonnelRank["Sub-Inspector"], PersonnelRank.Inspector]),
 });
@@ -55,7 +55,7 @@ const VALID_RANKS = Object.values(PersonnelRank);
 
 const excelColumns: ColumnDef<PersonnelRow>[] = [
   { key: "name",         header: "Full Name",     required: true },
-  { key: "beltNumber",   header: "Belt Number",   required: true },
+  { key: "beltNumber",   header: "PNO Number",   required: true },
   { key: "mobileNumber", header: "Mobile Number", required: true, validate: (v) => v.replace(/\D/g,"").length < 10 ? "Must be 10 digits" : null },
   {
     key: "rank",
@@ -179,7 +179,7 @@ export default function PersonnelManagement() {
         <Table>
           <TableHeader className="bg-muted/50">
             <TableRow>
-              <TableHead>Belt No.</TableHead>
+              <TableHead>PNO No.</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Rank</TableHead>
               <TableHead>Mobile</TableHead>
@@ -250,7 +250,7 @@ export default function PersonnelManagement() {
               <div className="grid grid-cols-2 gap-4">
                 <FormField control={form.control} name="beltNumber" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Belt Number</FormLabel>
+                    <FormLabel>PNO Number</FormLabel>
                     <FormControl><Input placeholder="e.g. 12345" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>

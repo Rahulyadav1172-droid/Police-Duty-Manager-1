@@ -108,7 +108,7 @@ export default function TransferReceipt() {
       return;
     }
     if (!form.beltNumber.trim()) {
-      toast({ title: "Belt number required", description: "Please enter the belt / PNO number.", variant: "destructive" });
+      toast({ title: "PNO number required", description: "Please enter the PNO number.", variant: "destructive" });
       return;
     }
     if (!form.rank) {
@@ -203,7 +203,7 @@ export default function TransferReceipt() {
             placeholder="e.g. Ram Kumar Singh"
           />
         </Field>
-        <Field label="Belt / PNO Number" required>
+        <Field label="PNO Number" required>
           <Input
             value={form.beltNumber}
             onChange={(e) => set("beltNumber", e.target.value)}
