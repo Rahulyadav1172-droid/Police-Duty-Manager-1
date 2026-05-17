@@ -479,7 +479,7 @@ export default function MessBooking() {
   const [bookings, setBookings]     = useState<Booking[]>(loadBookings);
   const [formOpen, setFormOpen]     = useState(false);
   const [editingId, setEditingId]   = useState<string | null>(null);
-  const [activeTab, setActiveTab]   = useState<"dashboard" | "records" | "availability">("dashboard");
+  const [activeTab, setActiveTab]   = useState<"dashboard" | "records" | "availability" | "history">("dashboard");
   const [calMonth, setCalMonth]     = useState(new Date());
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRoom, setFilterRoom]   = useState<string>("all");
@@ -632,6 +632,25 @@ export default function MessBooking() {
     [bookings, todayStr],
   );
 
+  const [historySearch, setHistorySearch] = useState("");
+  const [historyRoom, setHistoryRoom]     = useState("all");
+
+  const pastBookings = useMemo(
+    () => bookings
+      .filter((b) => b.checkOutDate < todayStr)
+      .sort((a, b) => b.checkOutDate.localeCompare(a.checkOutDate)),
+    [bookings, todayStr],
+  );
+
+  const filteredHistory = useMemo(() => {
+    return pastBookings.filter((b) => {
+      if (historySearch && !b.guestName.toLowerCase().includes(historySearch.toLowerCase()) &&
+          !b.refNo.toLowerCase().includes(historySearch.toLowerCase())) return false;
+      if (historyRoom !== "all" && !b.rooms.includes(historyRoom as RoomName)) return false;
+      return true;
+    });
+  }, [pastBookings, historySearch, historyRoom]);
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
 
@@ -673,6 +692,17 @@ export default function MessBooking() {
               className={`flex items-center gap-1.5 px-4 py-2 transition-colors ${activeTab === "availability" ? "bg-emerald-600 text-white" : "bg-background text-muted-foreground hover:bg-muted"}`}
             >
               <CalendarDays className="w-3.5 h-3.5" /> Availability
+            </button>
+            <button
+              onClick={() => setActiveTab("history")}
+              className={`flex items-center gap-1.5 px-4 py-2 transition-colors ${activeTab === "history" ? "bg-emerald-600 text-white" : "bg-background text-muted-foreground hover:bg-muted"}`}
+            >
+              <Clock className="w-3.5 h-3.5" /> History
+              {pastBookings.length > 0 && (
+                <span className={`text-[10px] rounded-full px-1.5 py-0.5 font-bold ${activeTab === "history" ? "bg-white/20" : "bg-slate-200 text-slate-600"}`}>
+                  {pastBookings.length}
+                </span>
+              )}
             </button>
           </div>
           <Button onClick={openNew} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2">
@@ -984,6 +1014,110 @@ export default function MessBooking() {
               </table>
             </div>
             <p className="text-xs text-muted-foreground px-5 py-2 border-t">Hover over a booked cell to see guest name and ref number.</p>
+          </div>
+        )}
+
+        {/* ── HISTORY TAB ── */}
+        {activeTab === "history" && (
+          <div className="space-y-4">
+
+            {/* Search + filter bar */}
+            <div className="bg-white rounded-xl border shadow-sm p-4">
+              <div className="flex gap-2 flex-wrap items-center">
+                <div className="relative flex-1 min-w-[180px]">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by guest name or ref no…"
+                    value={historySearch}
+                    onChange={(e) => setHistorySearch(e.target.value)}
+                    className="pl-8 h-8 text-sm"
+                  />
+                </div>
+                <select
+                  value={historyRoom}
+                  onChange={(e) => setHistoryRoom(e.target.value)}
+                  className="border rounded-md px-3 h-8 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                >
+                  <option value="all">All Suites</option>
+                  {ROOMS.map((r) => <option key={r} value={r}>{r}</option>)}
+                </select>
+                {(historySearch || historyRoom !== "all") && (
+                  <button
+                    onClick={() => { setHistorySearch(""); setHistoryRoom("all"); }}
+                    className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 px-2"
+                  >
+                    <X className="w-3.5 h-3.5" /> Clear
+                  </button>
+                )}
+                <span className="text-xs text-muted-foreground ml-auto">
+                  {filteredHistory.length} of {pastBookings.length} past booking{pastBookings.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+            </div>
+
+            {/* Past bookings list */}
+            {filteredHistory.length === 0 ? (
+              <div className="bg-white rounded-xl border shadow-sm p-10 flex flex-col items-center gap-3 text-center text-muted-foreground">
+                <Clock className="w-10 h-10 opacity-25" />
+                <p className="font-medium">{pastBookings.length === 0 ? "No booking history yet" : "No results match your search"}</p>
+                <p className="text-sm">
+                  {pastBookings.length === 0
+                    ? "Completed bookings will appear here after check-out."
+                    : "Try a different name or suite filter."}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filteredHistory.map((b) => (
+                  <div key={b.id} className="bg-white rounded-xl border shadow-sm p-4 opacity-90 hover:opacity-100 transition-opacity">
+                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-slate-100 border flex items-center justify-center shrink-0">
+                          <BedDouble className="w-5 h-5 text-slate-400" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm">{b.guestName}</p>
+                          <p className="text-xs text-muted-foreground">{b.mobile} · {b.rooms.join(", ")}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+                        <Badge variant="outline" className="text-xs font-mono text-slate-500">{b.refNo}</Badge>
+                        <Badge variant="secondary" className="text-xs">Checked Out</Badge>
+                        <button onClick={() => printLetter(b)} className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors" title="Reprint letter">
+                          <FileText className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => shareWhatsApp(b)} className="p-1.5 rounded-lg text-green-600 hover:bg-green-50 transition-colors" title="WhatsApp">
+                          <MessageCircle className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => deleteBooking(b.id)} className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition-colors" title="Delete record">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <CalendarRange className="w-3.5 h-3.5" />
+                        {fmtDate(b.checkInDate)} → {fmtDate(b.checkOutDate)}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        {fmtTime(b.checkInTime)} – {fmtTime(b.checkOutTime)}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <IndianRupee className="w-3.5 h-3.5" />
+                        {b.rentPerDay
+                          ? `₹${b.rentPerDay}/day · ${b.totalDays}d = ₹${b.totalRoomCharge.toLocaleString("en-IN")}`
+                          : `${b.totalDays} day${b.totalDays !== 1 ? "s" : ""}`}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Utensils className="w-3.5 h-3.5" />
+                        Food: {b.foodApplicable === "yes" ? "Applicable" : "N/A"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
