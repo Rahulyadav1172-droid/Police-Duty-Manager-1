@@ -67,8 +67,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <>
       <div className="p-5 border-b border-sidebar-border/50">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary-foreground/10 rounded-full flex items-center justify-center shrink-0">
-            <ShieldAlert className="w-6 h-6 text-primary-foreground" />
+          <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-white flex items-center justify-center">
+            <img src="/up-police-logo.png" alt="UP Police" className="w-9 h-9 object-contain" />
           </div>
           <div>
             <h1 className="font-bold text-base leading-tight uppercase tracking-wide">Duty Manager</h1>

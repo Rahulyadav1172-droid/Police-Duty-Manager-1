@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, Eye, EyeOff, Lock, RefreshCw } from "lucide-react";
+import { Eye, EyeOff, Lock, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,8 +61,8 @@ export default function LoginPage() {
 
         {/* Logo / header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-600 shadow-lg shadow-blue-900/50 mb-4">
-            <Shield className="w-10 h-10 text-white" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white shadow-lg shadow-blue-900/50 mb-4">
+            <img src="/up-police-logo.png" alt="UP Police" className="w-16 h-16 object-contain" />
           </div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight">Duty Manager</h1>
           <p className="text-blue-300 text-sm mt-1 font-medium uppercase tracking-widest">Ayodhya Police Line</p>
