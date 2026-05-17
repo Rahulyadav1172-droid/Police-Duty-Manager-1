@@ -124,7 +124,6 @@ export default function MusterRoll() {
           Download Muster Roll
         </Button>
       </div>
-
       {/* Live strength summary */}
       <div className="grid grid-cols-3 gap-4">
         {[
@@ -141,7 +140,6 @@ export default function MusterRoll() {
           </div>
         ))}
       </div>
-
       {/* Rank-wise breakdown */}
       {!isLoading && (
         <div className="bg-card border rounded-xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -162,7 +160,6 @@ export default function MusterRoll() {
           })}
         </div>
       )}
-
       {/* Parade configuration */}
       <div className="bg-card border rounded-xl p-5 space-y-4">
         <h2 className="font-bold text-sm text-foreground flex items-center gap-2">
@@ -226,7 +223,6 @@ export default function MusterRoll() {
           />
         </div>
       </div>
-
       {/* Preview table */}
       <div className="bg-card border rounded-xl overflow-hidden">
         <div className="bg-muted/60 border-b px-5 py-3 flex items-center justify-between gap-3">
@@ -270,7 +266,7 @@ export default function MusterRoll() {
                   <th className="px-3 py-2.5 text-center">PNO No.</th>
                   <th className="px-3 py-2.5 text-left">Rank</th>
                   <th className="px-3 py-2.5 text-center">Status</th>
-                  <th className="px-3 py-2.5 text-left">Duty Post</th>
+                  <th className="px-3 py-2.5 text-left">Duty Point</th>
                   <th className="px-3 py-2.5 text-center">Type</th>
                   <th className="px-3 py-2.5 text-center">Since</th>
                   <th className="px-3 py-2.5 text-center min-w-[80px]">Signature</th>
@@ -347,7 +343,6 @@ export default function MusterRoll() {
           </div>
         )}
       </div>
-
       {/* Bottom generate button */}
       <div className="flex justify-end pb-4">
         <Button
