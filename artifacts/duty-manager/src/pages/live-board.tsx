@@ -5,7 +5,10 @@ import { format, differenceInMinutes, differenceInHours } from "date-fns";
 import {
   ShieldAlert, MapPin, Search, Clock, Users,
   ArrowRightCircle, LogOut, CalendarCheck, CalendarOff,
+  FileDown, MessageCircle,
 } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import {
   useGetLiveBoard,
   getGetLiveBoardQueryKey,
@@ -76,6 +79,67 @@ export default function LiveBoard() {
 
   const { role } = useAuth();
   const isAdmin = role === "admin";
+
+  function generateDailyReportPDF() {
+    const doc = new jsPDF();
+    const today = format(new Date(), "dd MMMM yyyy");
+
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("Ayodhya Police Line — Daily Duty Report", 14, 18);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Date: ${today}  |  Generated: ${format(new Date(), "HH:mm")}`, 14, 26);
+
+    const onDutyRows = (liveBoard?.onDuty ?? []).map((e, i) => [
+      i + 1,
+      e.personnel?.name ?? "—",
+      e.personnel?.beltNumber ?? "—",
+      e.personnel?.rank ?? "—",
+      e.dutyPoint?.name ?? "—",
+      e.dutyPoint?.location ?? "—",
+      e.dutyType === "unlimited" ? "Unlimited" : "Fixed",
+      format(new Date(e.startDateTime), "HH:mm"),
+    ]);
+
+    autoTable(doc, {
+      startY: 32,
+      head: [["#", "Name", "Belt No", "Rank", "Duty Point", "Location", "Type", "Since"]],
+      body: onDutyRows,
+      headStyles: { fillColor: [30, 64, 175] },
+      styles: { fontSize: 8 },
+      margin: { left: 14, right: 14 },
+    });
+
+    const afterTable = (doc as any).lastAutoTable?.finalY ?? 80;
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Summary`, 14, afterTable + 12);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Total On Duty: ${liveBoard?.onDuty.length ?? 0}`, 14, afterTable + 20);
+    doc.text(`Total Available: ${(liveBoard?.available ?? []).filter(p => !onLeaveIds.has(p.id)).length}`, 80, afterTable + 20);
+    doc.text(`On Leave: ${leaveToday.length}`, 150, afterTable + 20);
+
+    doc.save(`daily-duty-report-${today.replace(/ /g, "-")}.pdf`);
+  }
+
+  function shareWhatsApp() {
+    const today = format(new Date(), "dd MMM yyyy");
+    const time = format(new Date(), "HH:mm");
+    const onDuty = liveBoard?.onDuty ?? [];
+    const available = (liveBoard?.available ?? []).filter(p => !onLeaveIds.has(p.id));
+
+    let msg = `🚔 *Ayodhya Police Line — Duty Report*\n📅 ${today} | 🕐 ${time}\n\n`;
+    msg += `*On Duty (${onDuty.length}):*\n`;
+    onDuty.forEach((e, i) => {
+      msg += `${i + 1}. ${e.personnel?.name ?? "—"} (${e.personnel?.rank ?? ""}) → ${e.dutyPoint?.name ?? "—"}\n`;
+    });
+    msg += `\n✅ *Available: ${available.length}*  |  🏖️ *On Leave: ${leaveToday.length}*\n`;
+    msg += `\n_Sent from Ayodhya Police Duty Manager_`;
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+  }
 
   const releaseMutation = useReleaseFromDuty({
     mutation: {
@@ -155,6 +219,23 @@ export default function LiveBoard() {
               className="pl-9 pr-4 py-2 bg-background border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary w-full"
             />
           </div>
+          <button
+            onClick={shareWhatsApp}
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 gap-2"
+            title="Share via WhatsApp"
+          >
+            <MessageCircle className="w-4 h-4 text-green-600" />
+            <span className="hidden sm:inline">WhatsApp</span>
+          </button>
+          <button
+            onClick={generateDailyReportPDF}
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 gap-2"
+            title="Download Daily Report PDF"
+          >
+            <FileDown className="w-4 h-4" />
+            <span className="hidden sm:inline">Daily Report</span>
+          </button>
+          {isAdmin && (
           <Link
             href="/assign"
             className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 gap-2"
@@ -163,6 +244,7 @@ export default function LiveBoard() {
             <CalendarCheck className="w-4 h-4" />
             Assign Duty
           </Link>
+          )}
         </div>
       </div>
 

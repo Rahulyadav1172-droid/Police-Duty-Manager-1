@@ -278,6 +278,53 @@ export interface BiometricDailySummary {
   punches: BiometricRecord[];
 }
 
+export interface Event {
+  id: number;
+  name: string;
+  date: string;
+  /** @nullable */
+  location?: string | null;
+  /** @nullable */
+  description?: string | null;
+  requiredHeadcount: number;
+  createdAt: string;
+}
+
+export interface EventInput {
+  /** @minLength 1 */
+  name: string;
+  date: string;
+  location?: string;
+  description?: string;
+  /** @minimum 0 */
+  requiredHeadcount: number;
+}
+
+export interface EventUpdate {
+  /** @minLength 1 */
+  name?: string;
+  date?: string;
+  location?: string;
+  description?: string;
+  /** @minimum 0 */
+  requiredHeadcount?: number;
+}
+
+export interface RotationEntry {
+  personnel: Personnel;
+  /** @nullable */
+  lastDutyDate?: string | null;
+  /** @nullable */
+  daysSinceLastDuty?: number | null;
+  totalDuties: number;
+}
+
+export interface TrendEntry {
+  date: string;
+  onDutyCount: number;
+  totalAssignments: number;
+}
+
 export type LeaveInputLeaveType = typeof LeaveInputLeaveType[keyof typeof LeaveInputLeaveType];
 
 
@@ -326,5 +373,12 @@ export type ListBiometricRecordsParams = {
  */
 date?: string;
 personnelId?: number;
+};
+
+export type GetRosterTrendsParams = {
+/**
+ * Number of past days to include. Defaults to 7.
+ */
+days?: number;
 };
 

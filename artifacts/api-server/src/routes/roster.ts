@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, isNull, lt, not } from "drizzle-orm";
+import { eq, and, isNull, lt, not, desc, sql, count as drizzleCount } from "drizzle-orm";
 import { db, rosterTable, personnelTable, dutyPointsTable } from "@workspace/db";
 import {
   AssignDutyBody,
@@ -13,6 +13,9 @@ import {
   ListRosterResponse,
   GetLiveBoardResponse,
   GetRosterStatsResponse,
+  GetRosterRotationResponse,
+  GetRosterTrendsResponse,
+  GetRosterTrendsQueryParams,
 } from "@workspace/api-zod";
 import { notifyDutyAssigned, notifyDutyReleased } from "../lib/sms";
 
@@ -253,6 +256,83 @@ router.get("/roster/stats", async (req, res): Promise<void> => {
       byRank,
     }),
   );
+});
+
+router.get("/roster/rotation", async (req, res): Promise<void> => {
+  const allPersonnel = await db.select().from(personnelTable);
+
+  const dutySummary = await db
+    .select({
+      personnelId: rosterTable.personnelId,
+      lastDutyDate: sql<string>`MAX(${rosterTable.startDateTime})`.as("lastDutyDate"),
+      totalDuties: drizzleCount(rosterTable.id).as("totalDuties"),
+    })
+    .from(rosterTable)
+    .groupBy(rosterTable.personnelId);
+
+  const dutyMap = new Map(dutySummary.map((d) => [d.personnelId, d]));
+  const now = new Date();
+
+  const result = allPersonnel
+    .map((p) => {
+      const duty = dutyMap.get(p.id);
+      const lastDutyDate = duty?.lastDutyDate ?? null;
+      const daysSinceLastDuty = lastDutyDate
+        ? Math.floor((now.getTime() - new Date(lastDutyDate).getTime()) / (1000 * 60 * 60 * 24))
+        : null;
+      return {
+        personnel: { ...p, createdAt: p.createdAt.toISOString() },
+        lastDutyDate: lastDutyDate ? new Date(lastDutyDate).toISOString() : null,
+        daysSinceLastDuty,
+        totalDuties: Number(duty?.totalDuties ?? 0),
+      };
+    })
+    .sort((a, b) => {
+      if (a.lastDutyDate === null && b.lastDutyDate === null) return 0;
+      if (a.lastDutyDate === null) return -1;
+      if (b.lastDutyDate === null) return 1;
+      return (b.daysSinceLastDuty ?? 0) - (a.daysSinceLastDuty ?? 0);
+    });
+
+  res.json(GetRosterRotationResponse.parse(result));
+});
+
+router.get("/roster/trends", async (req, res): Promise<void> => {
+  const query = GetRosterTrendsQueryParams.safeParse(req.query);
+  const days = query.success && query.data.days ? query.data.days : 7;
+
+  const trends: { date: string; onDutyCount: number; totalAssignments: number }[] = [];
+
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    d.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(d);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    const [row] = await db
+      .select({ count: drizzleCount(rosterTable.id) })
+      .from(rosterTable)
+      .where(
+        and(
+          sql`${rosterTable.startDateTime} <= ${dayEnd}`,
+          sql`(${rosterTable.endDateTime} IS NULL OR ${rosterTable.endDateTime} >= ${d})`,
+        ),
+      );
+
+    const [assigned] = await db
+      .select({ count: drizzleCount(rosterTable.id) })
+      .from(rosterTable)
+      .where(sql`DATE(${rosterTable.startDateTime}) = ${d.toISOString().split("T")[0]}`);
+
+    trends.push({
+      date: d.toISOString().split("T")[0],
+      onDutyCount: Number(row?.count ?? 0),
+      totalAssignments: Number(assigned?.count ?? 0),
+    });
+  }
+
+  res.json(GetRosterTrendsResponse.parse(trends));
 });
 
 router.get("/roster/:id", async (req, res): Promise<void> => {

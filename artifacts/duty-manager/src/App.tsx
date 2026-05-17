@@ -19,6 +19,8 @@ import TransferReceipt from "@/pages/transfer";
 import LeaveManagement from "@/pages/leave";
 import AttendanceSummary from "@/pages/attendance";
 import BiometricAttendance from "@/pages/biometric";
+import EventsPage from "@/pages/events";
+import RotationFairness from "@/pages/rotation";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +39,8 @@ function AdminRouter() {
         <Route path="/assign" component={AssignDuty} />
         <Route path="/personnel" component={PersonnelManagement} />
         <Route path="/duty-points" component={DutyPointsManagement} />
+        <Route path="/events" component={EventsPage} />
+        <Route path="/rotation" component={RotationFairness} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

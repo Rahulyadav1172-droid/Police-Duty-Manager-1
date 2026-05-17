@@ -528,6 +528,111 @@ export const GetBiometricTodayResponse = zod.array(GetBiometricTodayResponseItem
 
 
 /**
+ * @summary List all special events
+ */
+export const ListEventsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "date": zod.coerce.date(),
+  "location": zod.string().nullish(),
+  "description": zod.string().nullish(),
+  "requiredHeadcount": zod.number(),
+  "createdAt": zod.coerce.date()
+})
+export const ListEventsResponse = zod.array(ListEventsResponseItem)
+
+
+/**
+ * @summary Create a special event
+ */
+
+export const createEventBodyRequiredHeadcountMin = 0;
+
+
+
+export const CreateEventBody = zod.object({
+  "name": zod.string().min(1),
+  "date": zod.coerce.date(),
+  "location": zod.string().optional(),
+  "description": zod.string().optional(),
+  "requiredHeadcount": zod.number().min(createEventBodyRequiredHeadcountMin)
+})
+
+
+/**
+ * @summary Update a special event
+ */
+export const UpdateEventParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+export const updateEventBodyRequiredHeadcountMin = 0;
+
+
+
+export const UpdateEventBody = zod.object({
+  "name": zod.string().min(1).optional(),
+  "date": zod.coerce.date().optional(),
+  "location": zod.string().optional(),
+  "description": zod.string().optional(),
+  "requiredHeadcount": zod.number().min(updateEventBodyRequiredHeadcountMin).optional()
+})
+
+export const UpdateEventResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "date": zod.coerce.date(),
+  "location": zod.string().nullish(),
+  "description": zod.string().nullish(),
+  "requiredHeadcount": zod.number(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a special event
+ */
+export const DeleteEventParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Get duty rotation fairness data (last duty per personnel)
+ */
+export const GetRosterRotationResponseItem = zod.object({
+  "personnel": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "beltNumber": zod.string(),
+  "mobileNumber": zod.string(),
+  "rank": zod.enum(['Constable', 'Head Constable', 'Sub-Inspector', 'Inspector']),
+  "createdAt": zod.coerce.date()
+}),
+  "lastDutyDate": zod.coerce.date().nullish(),
+  "daysSinceLastDuty": zod.number().nullish(),
+  "totalDuties": zod.number()
+})
+export const GetRosterRotationResponse = zod.array(GetRosterRotationResponseItem)
+
+
+/**
+ * @summary Get daily duty count trends for the last N days
+ */
+export const GetRosterTrendsQueryParams = zod.object({
+  "days": zod.coerce.number().optional().describe('Number of past days to include. Defaults to 7.')
+})
+
+export const GetRosterTrendsResponseItem = zod.object({
+  "date": zod.coerce.date(),
+  "onDutyCount": zod.number(),
+  "totalAssignments": zod.number()
+})
+export const GetRosterTrendsResponse = zod.array(GetRosterTrendsResponseItem)
+
+
+/**
  * @summary Delete a biometric punch record
  */
 export const DeleteBiometricRecordParams = zod.object({

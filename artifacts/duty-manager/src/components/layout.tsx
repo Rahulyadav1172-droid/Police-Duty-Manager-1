@@ -1,4 +1,4 @@
-import { ShieldAlert, Users, MapPin, ListOrdered, CalendarCheck, Search, ArrowLeftRight, ClipboardList, PackageOpen, CalendarOff, LogOut, KeyRound, BarChart3, Fingerprint, Menu, X } from "lucide-react";
+import { ShieldAlert, Users, MapPin, ListOrdered, CalendarCheck, Search, ArrowLeftRight, ClipboardList, PackageOpen, CalendarOff, LogOut, KeyRound, BarChart3, Fingerprint, Menu, X, PartyPopper, RotateCcw } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
@@ -19,8 +19,10 @@ const ALL_NAV = [
   { name: "Leave Register",   href: "/leave",       icon: CalendarOff,  adminOnly: false },
   { name: "Attendance",       href: "/attendance",  icon: BarChart3,    adminOnly: false },
   { name: "Biometric",        href: "/biometric",   icon: Fingerprint,  adminOnly: false },
-  { name: "Personnel",        href: "/personnel",   icon: Users,        adminOnly: true  },
-  { name: "Duty Points",      href: "/duty-points", icon: MapPin,       adminOnly: true  },
+  { name: "Events & Festivals", href: "/events",    icon: PartyPopper,  adminOnly: false },
+  { name: "Rotation Fairness",  href: "/rotation",  icon: RotateCcw,    adminOnly: false },
+  { name: "Personnel",          href: "/personnel", icon: Users,        adminOnly: true  },
+  { name: "Duty Points",        href: "/duty-points", icon: MapPin,     adminOnly: true  },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

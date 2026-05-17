@@ -9,11 +9,13 @@ import {
   useListPersonnel,
   useListDutyPoints,
   useAssignDuty,
+  useGetLiveBoard,
   RosterInputDutyType,
   getGetLiveBoardQueryKey,
   getListRosterQueryKey,
 } from "@workspace/api-client-react";
 
+import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -45,6 +47,9 @@ export default function AssignDuty() {
 
   const { data: personnel } = useListPersonnel();
   const { data: dutyPoints } = useListDutyPoints();
+  const { data: liveBoard } = useGetLiveBoard({
+    query: { queryKey: getGetLiveBoardQueryKey() },
+  });
 
   const assignMutation = useAssignDuty({
     mutation: {
@@ -80,6 +85,10 @@ export default function AssignDuty() {
   });
 
   const dutyType = form.watch("dutyType");
+  const selectedPersonnelId = form.watch("personnelId");
+  const conflictEntry = liveBoard?.onDuty.find(
+    (e) => e.personnelId === selectedPersonnelId,
+  );
 
   const onSubmit = (values: z.infer<typeof assignSchema>) => {
     if (values.dutyType === RosterInputDutyType.unlimited) {
@@ -121,6 +130,19 @@ export default function AssignDuty() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
+          {conflictEntry && (
+            <div className="mb-5 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 p-4">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-amber-800 dark:text-amber-300 text-sm">Personnel Already On Duty</p>
+                <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+                  This personnel is currently deployed at{" "}
+                  <span className="font-semibold">{conflictEntry.dutyPoint?.name ?? "a duty point"}</span>.
+                  You must release them first before assigning a new duty.
+                </p>
+              </div>
+            </div>
+          )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 
@@ -261,7 +283,13 @@ export default function AssignDuty() {
 
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <Button variant="outline" type="button" onClick={() => setLocation("/")}>Cancel</Button>
-                <Button type="submit" size="lg" className="px-8 font-bold" disabled={assignMutation.isPending}>
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="px-8 font-bold"
+                  disabled={assignMutation.isPending || !!conflictEntry}
+                  title={conflictEntry ? "Release current duty first" : undefined}
+                >
                   {assignMutation.isPending ? "Deploying..." : "Deploy Personnel"}
                 </Button>
               </div>

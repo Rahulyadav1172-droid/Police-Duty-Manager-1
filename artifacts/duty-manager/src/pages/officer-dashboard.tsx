@@ -2,15 +2,19 @@ import { useMemo, useEffect, useState } from "react";
 import { format } from "date-fns";
 import {
   Users, ShieldAlert, CalendarOff, Fingerprint,
-  LogOut, Clock, MapPin, CheckCircle2, XCircle,
-  UserCheck, UserX, X,
+  LogOut, Clock, MapPin,
+  UserCheck, UserX, X, BarChart2,
 } from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from "recharts";
 import {
   useGetLiveBoard,
   getGetLiveBoardQueryKey,
   useGetRosterStats,
   useGetActiveLeavesToday,
   useGetBiometricToday,
+  useGetRosterTrends,
   RosterEntryStatus,
   type Personnel,
   type RosterEntry,
@@ -338,6 +342,12 @@ export default function OfficerDashboard() {
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [available, activeEntries]);
 
+  const [trendDays, setTrendDays] = useState<7 | 30>(7);
+  const { data: trends = [], isLoading: loadTrends } = useGetRosterTrends(
+    { days: trendDays },
+    { query: { queryKey: ["getGetRosterTrends", trendDays], refetchInterval: 60000 } },
+  );
+
   const isLoading = loadBoard || loadStats;
 
   return (
@@ -567,6 +577,60 @@ export default function OfficerDashboard() {
             )}
           </section>
         </div>
+
+        {/* Trend Charts */}
+        <section className="bg-white rounded-xl border shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <BarChart2 className="w-4 h-4 text-blue-600" />
+              <h2 className="font-bold text-base">Duty Deployment Trends</h2>
+            </div>
+            <div className="flex rounded-lg border overflow-hidden text-xs font-semibold shrink-0">
+              <button
+                className={`px-3 py-1.5 transition-colors ${trendDays === 7 ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+                onClick={() => setTrendDays(7)}
+              >
+                7 Days
+              </button>
+              <button
+                className={`px-3 py-1.5 transition-colors ${trendDays === 30 ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+                onClick={() => setTrendDays(30)}
+              >
+                30 Days
+              </button>
+            </div>
+          </div>
+          <div className="p-4">
+            {loadTrends ? (
+              <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">Loading trends…</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={trends} margin={{ top: 4, right: 16, left: -16, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(d) => {
+                      const parts = d.split("-");
+                      return `${parts[2]}/${parts[1]}`;
+                    }}
+                    tick={{ fontSize: 10 }}
+                  />
+                  <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                  <Tooltip
+                    labelFormatter={(d) => `Date: ${d}`}
+                    formatter={(val, name) => [val, name === "onDutyCount" ? "Active Duties" : "New Assignments"]}
+                  />
+                  <Legend
+                    formatter={(value) => value === "onDutyCount" ? "Active Duties" : "New Assignments"}
+                    wrapperStyle={{ fontSize: 11 }}
+                  />
+                  <Bar dataKey="onDutyCount" fill="#1d4ed8" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="totalAssignments" fill="#10b981" radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </section>
 
       </main>
 

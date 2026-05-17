@@ -5,6 +5,7 @@ import dutyPointsRouter from "./duty-points";
 import rosterRouter from "./roster";
 import leaveRouter from "./leave";
 import biometricRouter from "./biometric";
+import eventsRouter from "./events";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(dutyPointsRouter);
 router.use(rosterRouter);
 router.use(leaveRouter);
 router.use(biometricRouter);
+router.use(eventsRouter);
 
 export default router;
