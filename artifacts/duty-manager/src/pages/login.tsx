@@ -90,7 +90,7 @@ export default function LoginPage() {
           >
             <ShieldCheck className={`w-6 h-6 ${isAdmin ? "text-blue-400" : "text-white/40"}`} />
             <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-wide">Admin</p>
+              <p className="text-xs font-bold uppercase tracking-wide">गणना कार्यालय</p>
               <p className="text-[10px] text-white/50 mt-0.5">LOG IN</p>
             </div>
           </button>
