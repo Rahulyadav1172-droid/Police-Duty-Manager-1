@@ -115,7 +115,7 @@ export default function AttendanceSummary() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {STAT_CARDS.map(({ label, value, icon: Icon, cls, badge }) => (
           <div key={label} className={`bg-card rounded-lg border p-5 border-l-4 ${cls}`}>
             <div className="flex items-center justify-between mb-2">
@@ -168,6 +168,7 @@ export default function AttendanceSummary() {
         <div className="px-5 py-3 border-b bg-muted/30">
           <h3 className="font-semibold text-sm">Rank-wise Strength</h3>
         </div>
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader className="bg-muted/20">
             <TableRow>
@@ -209,6 +210,7 @@ export default function AttendanceSummary() {
             }
           </TableBody>
         </Table>
+        </div>
       </div>
 
       {/* Individual personnel table */}
@@ -216,6 +218,7 @@ export default function AttendanceSummary() {
         <div className="px-5 py-3 border-b bg-muted/30">
           <h3 className="font-semibold text-sm">Individual Status — {format(new Date(), "dd MMM yyyy")}</h3>
         </div>
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader className="bg-muted/20">
             <TableRow>
@@ -258,6 +261,7 @@ export default function AttendanceSummary() {
             }
           </TableBody>
         </Table>
+        </div>
       </div>
     </div>
   );

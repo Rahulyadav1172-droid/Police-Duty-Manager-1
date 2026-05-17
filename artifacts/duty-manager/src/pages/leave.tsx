@@ -225,7 +225,7 @@ export default function LeaveManagement() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {[
           { label: "On Leave Today", value: onLeaveToday, icon: CalendarOff, cls: "border-l-4 border-l-primary" },
           { label: "Sick Leave",     value: sickToday,    icon: Stethoscope, cls: "border-l-4 border-l-red-500" },
@@ -287,6 +287,7 @@ export default function LeaveManagement() {
 
       {/* Table */}
       <div className="bg-card rounded-md border shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader className="bg-muted/50">
             <TableRow>
@@ -351,6 +352,7 @@ export default function LeaveManagement() {
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
 
       {/* Add / Edit dialog */}

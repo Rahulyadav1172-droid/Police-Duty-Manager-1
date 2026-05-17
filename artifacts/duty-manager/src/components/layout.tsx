@@ -1,6 +1,6 @@
-import { ShieldAlert, Users, MapPin, ListOrdered, CalendarCheck, Search, ArrowLeftRight, ClipboardList, PackageOpen, CalendarOff, LogOut, KeyRound, BarChart3, Fingerprint } from "lucide-react";
+import { ShieldAlert, Users, MapPin, ListOrdered, CalendarCheck, Search, ArrowLeftRight, ClipboardList, PackageOpen, CalendarOff, LogOut, KeyRound, BarChart3, Fingerprint, Menu, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -14,12 +14,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { logout, changePassword } = useAuth();
   const { toast } = useToast();
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [changePassOpen, setChangePassOpen] = useState(false);
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNext, setShowNext] = useState(false);
+
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location]);
+
+  // Close sidebar on resize to desktop
+  useEffect(() => {
+    const handler = () => {
+      if (window.innerWidth >= 768) setSidebarOpen(false);
+    };
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
 
   const navigation = [
     { name: "Live Board",       href: "/",           icon: ShieldAlert },
@@ -48,83 +63,127 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-background flex flex-col md:flex-row w-full font-sans">
-      {/* Sidebar */}
-      <div className="w-full md:w-64 bg-sidebar text-sidebar-foreground flex flex-col flex-shrink-0 border-r border-sidebar-border">
-        <div className="p-6 border-b border-sidebar-border/50">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary-foreground/10 rounded-full flex items-center justify-center">
-              <ShieldAlert className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="font-bold text-lg leading-tight uppercase tracking-wide">Duty Manager</h1>
-              <p className="text-xs text-sidebar-foreground/60 uppercase tracking-widest font-semibold">Ayodhya Police</p>
-            </div>
+  const SidebarContent = () => (
+    <>
+      <div className="p-5 border-b border-sidebar-border/50">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-primary-foreground/10 rounded-full flex items-center justify-center shrink-0">
+            <ShieldAlert className="w-6 h-6 text-primary-foreground" />
           </div>
-        </div>
-        <nav className="flex-1 px-4 py-6 space-y-2">
-          {navigation.map((item) => {
-            const isActive = location === item.href;
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-md transition-colors text-sm font-medium ${
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                }`}
-                data-testid={`nav-${item.name.toLowerCase().replace(" ", "-")}`}
-              >
-                <item.icon className="w-5 h-5" />
-                {item.name}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="p-4 border-t border-sidebar-border/50 space-y-1">
+          <div>
+            <h1 className="font-bold text-base leading-tight uppercase tracking-wide">Duty Manager</h1>
+            <p className="text-xs text-sidebar-foreground/60 uppercase tracking-widest font-semibold">Ayodhya Police</p>
+          </div>
+          {/* Close button — mobile only */}
           <button
-            onClick={() => setChangePassOpen(true)}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-xs text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/40 transition-colors"
+            onClick={() => setSidebarOpen(false)}
+            className="ml-auto md:hidden text-sidebar-foreground/60 hover:text-sidebar-foreground"
           >
-            <KeyRound className="w-3.5 h-3.5" />
-            Change Password
-          </button>
-          <button
-            onClick={logout}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-xs text-sidebar-foreground/60 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            Sign Out
+            <X className="w-5 h-5" />
           </button>
         </div>
       </div>
-      {/* Main Content */}
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        {navigation.map((item) => {
+          const isActive = location === item.href;
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sm font-medium ${
+                isActive
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+              }`}
+              data-testid={`nav-${item.name.toLowerCase().replace(" ", "-")}`}
+            >
+              <item.icon className="w-5 h-5 shrink-0" />
+              {item.name}
+            </Link>
+          );
+        })}
+      </nav>
+      <div className="p-3 border-t border-sidebar-border/50 space-y-1">
+        <button
+          onClick={() => { setChangePassOpen(true); setSidebarOpen(false); }}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-xs text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/40 transition-colors"
+        >
+          <KeyRound className="w-3.5 h-3.5" />
+          Change Password
+        </button>
+        <button
+          onClick={logout}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-xs text-sidebar-foreground/60 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          Sign Out
+        </button>
+      </div>
+    </>
+  );
+
+  return (
+    <div className="min-h-screen bg-background flex w-full font-sans">
+
+      {/* ── Mobile overlay ─────────────────────────────────────────────── */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* ── Sidebar ────────────────────────────────────────────────────── */}
+      {/* Desktop: always visible, relative. Mobile: fixed drawer sliding from left. */}
+      <aside
+        className={`
+          fixed inset-y-0 left-0 z-50 flex flex-col w-64
+          bg-sidebar text-sidebar-foreground border-r border-sidebar-border
+          transform transition-transform duration-200 ease-in-out
+          md:relative md:translate-x-0 md:z-auto md:transition-none
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        `}
+      >
+        <SidebarContent />
+      </aside>
+
+      {/* ── Main area ──────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0 max-h-screen overflow-hidden">
-        <header className="h-16 flex items-center justify-between px-8 border-b bg-card">
-          <h2 className="text-lg font-bold text-foreground capitalize">
+        <header className="h-14 md:h-16 flex items-center justify-between px-4 md:px-8 border-b bg-card shrink-0">
+          {/* Hamburger — mobile only */}
+          <button
+            className="md:hidden text-foreground p-1 rounded-md hover:bg-muted transition-colors"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open menu"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+
+          <h2 className="text-base md:text-lg font-bold text-foreground capitalize truncate">
             {navigation.find((n) => n.href === location)?.name || "Dashboard"}
           </h2>
-          <div className="flex items-center gap-4">
-            <div className="relative hidden md:block">
+
+          <div className="flex items-center gap-2 md:gap-4">
+            <div className="relative hidden lg:block">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search..."
-                className="pl-9 pr-4 py-2 bg-muted/50 border-none rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary w-64"
+                className="pl-9 pr-4 py-2 bg-muted/50 border-none rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary w-56"
               />
             </div>
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">AP</div>
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">AP</div>
           </div>
         </header>
-        <main className="flex-1 overflow-auto p-4 md:p-8 bg-muted/20">
+
+        <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 bg-muted/20">
           {children}
         </main>
       </div>
+
       {/* Change Password Dialog */}
       <Dialog open={changePassOpen} onOpenChange={setChangePassOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm mx-4">
           <DialogHeader><DialogTitle>Change Password</DialogTitle></DialogHeader>
           <form onSubmit={handleChangePassword} className="space-y-4 pt-1">
             <div>

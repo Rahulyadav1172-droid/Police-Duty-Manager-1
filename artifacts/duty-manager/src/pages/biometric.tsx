@@ -176,6 +176,7 @@ export default function BiometricAttendance() {
             <h3 className="font-semibold text-sm">Personnel Biometric Summary — {format(parseISO(selectedDate), "dd MMM yyyy")}</h3>
             <span className="text-xs text-muted-foreground">{isToday ? "Live (today)" : "Historical"}</span>
           </div>
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader className="bg-muted/20">
               <TableRow>
@@ -248,6 +249,7 @@ export default function BiometricAttendance() {
               }
             </TableBody>
           </Table>
+          </div>
         </div>
       )}
 
@@ -257,6 +259,7 @@ export default function BiometricAttendance() {
           <div className="px-5 py-3 border-b bg-muted/30">
             <h3 className="font-semibold text-sm">All Punch Records — {format(parseISO(selectedDate), "dd MMM yyyy")} ({logRecords.length} records)</h3>
           </div>
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader className="bg-muted/20">
               <TableRow>
@@ -313,6 +316,7 @@ export default function BiometricAttendance() {
               }
             </TableBody>
           </Table>
+          </div>
         </div>
       )}
 

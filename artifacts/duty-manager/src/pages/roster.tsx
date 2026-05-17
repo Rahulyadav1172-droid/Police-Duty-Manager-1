@@ -194,6 +194,7 @@ export default function RosterHistory() {
       )}
 
       <div className="bg-card rounded-md border shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader className="bg-muted/50">
             <TableRow>
@@ -269,6 +270,7 @@ export default function RosterHistory() {
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
     </div>
   );
