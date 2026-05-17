@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { format } from "date-fns";
 import {
   Users, ShieldAlert, Clock, CalendarOff,
-  FileDown, CheckCircle, XCircle, AlertTriangle,
+  FileDown, CheckCircle, XCircle, AlertTriangle, UserX,
 } from "lucide-react";
 import {
   useListPersonnel,
@@ -87,12 +87,14 @@ export default function AttendanceSummary() {
   const onDuty    = onDutyIds.size;
   const onLeave   = onLeaveIds.size;
   const available = total - onDuty - onLeave;
+  const absent    = useMemo(() => leaveToday.filter(l => l.leaveType === "absent").length, [leaveToday]);
 
   const STAT_CARDS = [
-    { label: "Total Strength",  value: total,     icon: Users,        cls: "border-l-primary",   badge: "bg-primary/10 text-primary" },
-    { label: "On Duty",         value: onDuty,    icon: ShieldAlert,  cls: "border-l-blue-600",  badge: "bg-blue-50 text-blue-800" },
-    { label: "Available",       value: available, icon: Clock,        cls: "border-l-emerald-500",badge: "bg-emerald-50 text-emerald-800" },
-    { label: "On Leave Today",  value: onLeave,   icon: CalendarOff,  cls: "border-l-amber-500", badge: "bg-amber-50 text-amber-800" },
+    { label: "Total Strength",  value: total,     icon: Users,        cls: "border-l-primary",    badge: "bg-primary/10 text-primary" },
+    { label: "On Duty",         value: onDuty,    icon: ShieldAlert,  cls: "border-l-blue-600",   badge: "bg-blue-50 text-blue-800" },
+    { label: "Available",       value: available, icon: Clock,        cls: "border-l-emerald-500", badge: "bg-emerald-50 text-emerald-800" },
+    { label: "On Leave Today",  value: onLeave,   icon: CalendarOff,  cls: "border-l-amber-500",  badge: "bg-amber-50 text-amber-800" },
+    { label: "Absent (AWOL)",   value: absent,    icon: UserX,        cls: "border-l-red-500",    badge: "bg-red-50 text-red-700" },
   ];
 
   return (
@@ -113,7 +115,7 @@ export default function AttendanceSummary() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {STAT_CARDS.map(({ label, value, icon: Icon, cls, badge }) => (
           <div key={label} className={`bg-card rounded-lg border p-5 border-l-4 ${cls}`}>
             <div className="flex items-center justify-between mb-2">
