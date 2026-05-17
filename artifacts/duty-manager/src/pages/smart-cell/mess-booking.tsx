@@ -33,7 +33,7 @@ const bookingSchema = z.object({
   checkInTime:    z.string().min(1, "Check-in time is required"),
   checkOutDate:   z.string().min(1, "Check-out date is required"),
   checkOutTime:   z.string().min(1, "Check-out time is required"),
-  rentPerDay:     z.coerce.number().min(1, "Rent per day must be at least 1"),
+  rentPerDay:     z.preprocess((v) => (v === "" || v === undefined || v === null) ? undefined : Number(v), z.number().min(1).optional()),
   foodApplicable: z.enum(["yes", "no"]),
   foodCharge:     z.coerce.number().min(0).optional(),
 }).superRefine((data, ctx) => {
@@ -281,7 +281,7 @@ function printLetter(b: Booking) {
         <li>सूट नम्बरः &nbsp;${suitesStr}</li>
         <li>चेक-इन/चेक-आउट की तिथि: &nbsp;${checkInStr} समय : ${checkInTimeStr} / ${checkOutStr} समय : ${checkOutTimeStr}</li>
         <li>कुल दिनः &nbsp;${b.totalDays}</li>
-        <li>प्रति रूम प्रति दिन किरायाः &nbsp;₹${b.rentPerDay.toLocaleString("en-IN")}/-</li>
+        ${b.rentPerDay ? `<li>प्रति रूम प्रति दिन किरायाः &nbsp;₹${b.rentPerDay.toLocaleString("en-IN")}/-</li>` : ""}
         ${b.foodApplicable === "yes" ? `<li>फूड चार्जः &nbsp;Applicable${b.foodCharge ? ` (₹${b.foodCharge.toLocaleString("en-IN")}/-)` : ""}</li>` : ""}
       </ul>
 
@@ -333,7 +333,7 @@ function shareWhatsApp(b: Booking) {
     `Check-in:  ${fmtDate(b.checkInDate)} at ${fmtTime(b.checkInTime)}\n` +
     `Check-out: ${fmtDate(b.checkOutDate)} at ${fmtTime(b.checkOutTime)}\n` +
     `Stay: ${b.totalDays} day(s)\n` +
-    `Rent/day: ₹${b.rentPerDay.toLocaleString("en-IN")}\n` +
+    `${b.rentPerDay ? `Rent/day: ₹${b.rentPerDay.toLocaleString("en-IN")}\n` : ""}` +
     `Food: ${b.foodApplicable === "yes" ? "Applicable" : "Not Applicable"}\n\n` +
     `Contact: उ0नि0 यदुनाथ — 8317041684\n` +
     `हम आपके स्वागत के लिए उत्सुक हैं 🙏`;
@@ -388,7 +388,7 @@ export default function MessBooking() {
   const watchedRooms   = watch("rooms") ?? [];
 
   const totalDays = useMemo(() => calcDays(checkInDate, checkOutDate), [checkInDate, checkOutDate]);
-  const totalRoomCharge = (rentPerDay ?? 0) * totalDays;
+  const totalRoomCharge = rentPerDay ? rentPerDay * totalDays : 0;
 
   function openNew() {
     reset({ rooms: ["Suite - 1"], checkInTime: "12:00", checkOutTime: "11:00", foodApplicable: "no" });
@@ -776,14 +776,15 @@ export default function MessBooking() {
               <span className="font-bold text-emerald-800">{totalDays} day{totalDays !== 1 ? "s" : ""}</span>
             </div>
 
-            {/* Rent per day */}
+            {/* Rent per day — optional */}
             <div>
               <Label className="text-sm font-medium flex items-center gap-1.5 mb-1.5">
                 <IndianRupee className="w-3.5 h-3.5" /> Room Rent per Day (₹)
+                <span className="text-xs text-muted-foreground font-normal ml-1">(optional)</span>
               </Label>
-              <Input type="number" min={1} {...register("rentPerDay")} placeholder="e.g. 500" />
+              <Input type="number" min={1} {...register("rentPerDay")} placeholder="Leave blank if not applicable" />
               {errors.rentPerDay && <p className="text-xs text-red-500 mt-1">{errors.rentPerDay.message}</p>}
-              {totalDays > 0 && (rentPerDay ?? 0) > 0 && (
+              {totalDays > 0 && rentPerDay && rentPerDay > 0 && (
                 <p className="text-xs text-muted-foreground mt-1">
                   Total: ₹{totalRoomCharge.toLocaleString("en-IN")}/- ({totalDays}d × ₹{rentPerDay})
                 </p>
