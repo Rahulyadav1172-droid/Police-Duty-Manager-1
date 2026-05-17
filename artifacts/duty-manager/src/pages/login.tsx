@@ -1,14 +1,20 @@
 import { useState } from "react";
-import { Eye, EyeOff, Lock, RefreshCw, ShieldCheck, Star } from "lucide-react";
+import { Eye, EyeOff, Lock, RefreshCw, ShieldCheck, Star, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth, type UserRole } from "@/hooks/use-auth";
+import { useAuth, SESSION_EXPIRED_KEY, type UserRole } from "@/hooks/use-auth";
 
 export default function LoginPage() {
   const { login, changePassword } = useAuth();
+
+  const [sessionExpired] = useState(() => {
+    const flag = localStorage.getItem(SESSION_EXPIRED_KEY) === "1";
+    if (flag) localStorage.removeItem(SESSION_EXPIRED_KEY);
+    return flag;
+  });
   const { toast } = useToast();
 
   const [selectedRole, setSelectedRole] = useState<UserRole>("admin");
@@ -76,6 +82,16 @@ export default function LoginPage() {
           <h1 className="text-3xl font-extrabold text-white tracking-tight">Duty Manager</h1>
           <p className="text-blue-300 text-sm mt-1 font-medium uppercase tracking-widest">Ayodhya Police Line</p>
         </div>
+
+        {/* Session-expired notice */}
+        {sessionExpired && (
+          <div className="mb-5 flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-amber-300">
+            <Clock className="w-4 h-4 mt-0.5 shrink-0" />
+            <p className="text-xs font-medium leading-snug">
+              You were automatically logged out after 1 hour of inactivity. Please sign in again.
+            </p>
+          </div>
+        )}
 
         {/* Role selector */}
         <div className="grid grid-cols-2 gap-3 mb-5">

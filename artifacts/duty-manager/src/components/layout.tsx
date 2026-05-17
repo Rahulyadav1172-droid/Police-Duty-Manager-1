@@ -112,7 +112,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           Change Password
         </button>
         <button
-          onClick={logout}
+          onClick={() => logout()}
           className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-xs text-sidebar-foreground/60 hover:text-red-400 hover:bg-red-500/10 transition-colors"
         >
           <LogOut className="w-3.5 h-3.5" />

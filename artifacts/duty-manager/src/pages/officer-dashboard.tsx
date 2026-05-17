@@ -371,7 +371,7 @@ export default function OfficerDashboard() {
               <LiveClock />
             </div>
             <button
-              onClick={logout}
+              onClick={() => logout()}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-sm font-medium"
             >
               <LogOut className="w-4 h-4" />

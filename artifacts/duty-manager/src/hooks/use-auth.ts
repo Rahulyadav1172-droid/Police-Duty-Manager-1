@@ -1,4 +1,4 @@
-import { useState, useCallback, createContext, useContext } from "react";
+import { useState, useCallback, useEffect, createContext, useContext } from "react";
 
 const DEFAULT_ADMIN_PASSWORD   = "police@123";
 const DEFAULT_OFFICER_PASSWORD = "officer@123";
@@ -6,6 +6,13 @@ const ADMIN_PASSWORD_KEY       = "apl_password";
 const OFFICER_PASSWORD_KEY     = "apl_officer_password";
 const AUTH_KEY                 = "apl_authenticated";
 const ROLE_KEY                 = "apl_role";
+const LAST_ACTIVITY_KEY        = "apl_last_activity";
+const SESSION_EXPIRED_KEY      = "apl_session_expired";
+
+const INACTIVITY_TIMEOUT_MS = 60 * 60 * 1000;
+const CHECK_INTERVAL_MS     = 60 * 1000;
+
+const ACTIVITY_EVENTS = ["mousemove", "mousedown", "keydown", "touchstart", "scroll", "click"] as const;
 
 export type UserRole = "admin" | "officer";
 
@@ -16,7 +23,7 @@ export interface AuthContextValue {
   isAuthenticated: boolean;
   role: UserRole | null;
   login: (password: string, role: UserRole) => boolean;
-  logout: () => void;
+  logout: (expired?: boolean) => void;
   changePassword: (current: string, next: string, role?: UserRole) => { success: boolean; error?: string };
 }
 
@@ -48,14 +55,18 @@ export function useAuthState(): AuthContextValue {
     }
     localStorage.setItem(AUTH_KEY, "true");
     localStorage.setItem(ROLE_KEY, loginRole);
+    localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
+    localStorage.removeItem(SESSION_EXPIRED_KEY);
     setIsAuthenticated(true);
     setRole(loginRole);
     return true;
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback((expired = false) => {
     localStorage.removeItem(AUTH_KEY);
     localStorage.removeItem(ROLE_KEY);
+    localStorage.removeItem(LAST_ACTIVITY_KEY);
+    if (expired) localStorage.setItem(SESSION_EXPIRED_KEY, "1");
     setIsAuthenticated(false);
     setRole(null);
   }, []);
@@ -74,5 +85,33 @@ export function useAuthState(): AuthContextValue {
     [role],
   );
 
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    if (!localStorage.getItem(LAST_ACTIVITY_KEY)) {
+      localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
+    }
+
+    function refreshActivity() {
+      localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
+    }
+
+    ACTIVITY_EVENTS.forEach((e) => window.addEventListener(e, refreshActivity, { passive: true }));
+
+    const timer = setInterval(() => {
+      const last = Number(localStorage.getItem(LAST_ACTIVITY_KEY) ?? 0);
+      if (Date.now() - last > INACTIVITY_TIMEOUT_MS) {
+        logout(true);
+      }
+    }, CHECK_INTERVAL_MS);
+
+    return () => {
+      ACTIVITY_EVENTS.forEach((e) => window.removeEventListener(e, refreshActivity));
+      clearInterval(timer);
+    };
+  }, [isAuthenticated, logout]);
+
   return { isAuthenticated, role, login, logout, changePassword };
 }
+
+export { SESSION_EXPIRED_KEY };
