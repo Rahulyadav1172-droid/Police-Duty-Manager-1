@@ -49,7 +49,7 @@ export default function MusterRoll() {
 
   // Map personnel id → active roster entry (from live board)
   const dutyMap = useMemo(() => {
-    const map = new Map<number, (typeof liveBoard)["onDuty"][number]>();
+    const map = new Map<number, NonNullable<typeof liveBoard>["onDuty"][number]>();
     liveBoard?.onDuty?.forEach((entry) => {
       map.set(entry.personnelId, entry);
     });

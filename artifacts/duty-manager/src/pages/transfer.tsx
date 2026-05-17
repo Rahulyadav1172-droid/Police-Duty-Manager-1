@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useGetPersonnel } from "@workspace/api-client-react";
+import { useListPersonnel } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,7 +62,7 @@ const today = new Date().toISOString().slice(0, 10);
 
 export default function TransferReceipt() {
   const { toast } = useToast();
-  const { data: personnelList } = useGetPersonnel();
+  const { data: personnelList } = useListPersonnel();
 
   // Mode: "manual" or "lookup"
   const [mode, setMode] = useState<"manual" | "lookup">("manual");

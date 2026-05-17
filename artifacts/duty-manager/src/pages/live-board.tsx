@@ -42,12 +42,14 @@ export default function LiveBoard() {
   
   const { data: liveBoard, isLoading: isLiveBoardLoading } = useGetLiveBoard({
     query: {
-      refetchInterval: 30000, // 30 seconds
+      queryKey: getGetLiveBoardQueryKey(),
+      refetchInterval: 30000,
     }
   });
   
   const { data: stats, isLoading: isStatsLoading } = useGetRosterStats({
     query: {
+      queryKey: ["getRosterStats"],
       refetchInterval: 30000,
     }
   });

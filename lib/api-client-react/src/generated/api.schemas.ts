@@ -192,3 +192,76 @@ export interface RosterStats {
   byRank: RankStat[];
 }
 
+export type LeaveRecordLeaveType = typeof LeaveRecordLeaveType[keyof typeof LeaveRecordLeaveType];
+
+
+export const LeaveRecordLeaveType = {
+  sick_leave: 'sick_leave',
+  earned_leave: 'earned_leave',
+  casual_leave: 'casual_leave',
+  absent: 'absent',
+} as const;
+
+export type LeaveRecordStatus = typeof LeaveRecordStatus[keyof typeof LeaveRecordStatus];
+
+
+export const LeaveRecordStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export interface LeaveRecord {
+  id: number;
+  personnelId: number;
+  leaveType: LeaveRecordLeaveType;
+  startDate: string;
+  endDate: string;
+  reason?: string | null;
+  status: LeaveRecordStatus;
+  createdAt: string;
+  personnel?: Personnel;
+}
+
+export type LeaveInputLeaveType = typeof LeaveInputLeaveType[keyof typeof LeaveInputLeaveType];
+
+
+export const LeaveInputLeaveType = {
+  sick_leave: 'sick_leave',
+  earned_leave: 'earned_leave',
+  casual_leave: 'casual_leave',
+  absent: 'absent',
+} as const;
+
+export type LeaveInputStatus = typeof LeaveInputStatus[keyof typeof LeaveInputStatus];
+
+
+export const LeaveInputStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export interface LeaveInput {
+  personnelId: number;
+  leaveType: LeaveInputLeaveType;
+  startDate: string;
+  endDate: string;
+  reason?: string;
+  status: LeaveInputStatus;
+}
+
+export type ListLeaveParams = {
+personnelId?: number;
+status?: ListLeaveStatus;
+};
+
+export type ListLeaveStatus = typeof ListLeaveStatus[keyof typeof ListLeaveStatus];
+
+
+export const ListLeaveStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+

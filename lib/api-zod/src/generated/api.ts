@@ -384,3 +384,140 @@ export const ReleaseFromDutyResponse = zod.object({
 })
 
 
+/**
+ * @summary List all leave records
+ */
+export const ListLeaveQueryParams = zod.object({
+  "personnelId": zod.coerce.number().optional(),
+  "status": zod.enum(['pending', 'approved', 'rejected']).optional()
+})
+
+export const ListLeaveResponseItem = zod.object({
+  "id": zod.number(),
+  "personnelId": zod.number(),
+  "leaveType": zod.enum(['sick_leave', 'earned_leave', 'casual_leave', 'absent']),
+  "startDate": zod.coerce.date(),
+  "endDate": zod.coerce.date(),
+  "reason": zod.string().nullish(),
+  "status": zod.enum(['pending', 'approved', 'rejected']),
+  "createdAt": zod.coerce.date(),
+  "personnel": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "beltNumber": zod.string(),
+  "mobileNumber": zod.string(),
+  "rank": zod.enum(['Constable', 'Head Constable', 'Sub-Inspector', 'Inspector']),
+  "createdAt": zod.coerce.date()
+}).optional()
+})
+export const ListLeaveResponse = zod.array(ListLeaveResponseItem)
+
+
+/**
+ * @summary Create a new leave record
+ */
+export const CreateLeaveBody = zod.object({
+  "personnelId": zod.number(),
+  "leaveType": zod.enum(['sick_leave', 'earned_leave', 'casual_leave', 'absent']),
+  "startDate": zod.coerce.date(),
+  "endDate": zod.coerce.date(),
+  "reason": zod.string().optional(),
+  "status": zod.enum(['pending', 'approved', 'rejected'])
+})
+
+
+/**
+ * @summary Get all personnel currently on leave today
+ */
+export const GetActiveLeavesTodayResponseItem = zod.object({
+  "id": zod.number(),
+  "personnelId": zod.number(),
+  "leaveType": zod.enum(['sick_leave', 'earned_leave', 'casual_leave', 'absent']),
+  "startDate": zod.coerce.date(),
+  "endDate": zod.coerce.date(),
+  "reason": zod.string().nullish(),
+  "status": zod.enum(['pending', 'approved', 'rejected']),
+  "createdAt": zod.coerce.date(),
+  "personnel": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "beltNumber": zod.string(),
+  "mobileNumber": zod.string(),
+  "rank": zod.enum(['Constable', 'Head Constable', 'Sub-Inspector', 'Inspector']),
+  "createdAt": zod.coerce.date()
+}).optional()
+})
+export const GetActiveLeavesTodayResponse = zod.array(GetActiveLeavesTodayResponseItem)
+
+
+/**
+ * @summary Get a single leave record
+ */
+export const GetLeaveParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetLeaveResponse = zod.object({
+  "id": zod.number(),
+  "personnelId": zod.number(),
+  "leaveType": zod.enum(['sick_leave', 'earned_leave', 'casual_leave', 'absent']),
+  "startDate": zod.coerce.date(),
+  "endDate": zod.coerce.date(),
+  "reason": zod.string().nullish(),
+  "status": zod.enum(['pending', 'approved', 'rejected']),
+  "createdAt": zod.coerce.date(),
+  "personnel": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "beltNumber": zod.string(),
+  "mobileNumber": zod.string(),
+  "rank": zod.enum(['Constable', 'Head Constable', 'Sub-Inspector', 'Inspector']),
+  "createdAt": zod.coerce.date()
+}).optional()
+})
+
+
+/**
+ * @summary Update a leave record
+ */
+export const UpdateLeaveParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateLeaveBody = zod.object({
+  "personnelId": zod.number(),
+  "leaveType": zod.enum(['sick_leave', 'earned_leave', 'casual_leave', 'absent']),
+  "startDate": zod.coerce.date(),
+  "endDate": zod.coerce.date(),
+  "reason": zod.string().optional(),
+  "status": zod.enum(['pending', 'approved', 'rejected'])
+})
+
+export const UpdateLeaveResponse = zod.object({
+  "id": zod.number(),
+  "personnelId": zod.number(),
+  "leaveType": zod.enum(['sick_leave', 'earned_leave', 'casual_leave', 'absent']),
+  "startDate": zod.coerce.date(),
+  "endDate": zod.coerce.date(),
+  "reason": zod.string().nullish(),
+  "status": zod.enum(['pending', 'approved', 'rejected']),
+  "createdAt": zod.coerce.date(),
+  "personnel": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "beltNumber": zod.string(),
+  "mobileNumber": zod.string(),
+  "rank": zod.enum(['Constable', 'Head Constable', 'Sub-Inspector', 'Inspector']),
+  "createdAt": zod.coerce.date()
+}).optional()
+})
+
+
+/**
+ * @summary Delete a leave record
+ */
+export const DeleteLeaveParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+

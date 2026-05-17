@@ -8,7 +8,7 @@ type RosterEntry = {
   dutyPointId: number;
   dutyType: string;
   startDateTime: string;
-  endDateTime: string | null;
+  endDateTime?: string | null;
   status: string;
   notes?: string | null;
   personnel?: {
@@ -542,7 +542,7 @@ export type MusterRosterEntry = {
   id: number;
   dutyType: string;
   startDateTime: string;
-  endDateTime: string | null;
+  endDateTime?: string | null;
   status: string;
   dutyPoint?: {
     name: string;

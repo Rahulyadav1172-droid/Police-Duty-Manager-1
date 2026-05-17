@@ -13,6 +13,7 @@ import AssignDuty from "@/pages/assign";
 import HandoverReport from "@/pages/handover";
 import MusterRoll from "@/pages/muster";
 import TransferReceipt from "@/pages/transfer";
+import LeaveManagement from "@/pages/leave";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ function Router() {
         <Route path="/handover" component={HandoverReport} />
         <Route path="/muster" component={MusterRoll} />
         <Route path="/transfer" component={TransferReceipt} />
+        <Route path="/leave" component={LeaveManagement} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

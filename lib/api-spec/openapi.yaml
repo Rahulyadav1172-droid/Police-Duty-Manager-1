@@ -16,6 +16,8 @@ tags:
     description: Duty point locations
   - name: roster
     description: Duty roster/assignment management
+  - name: leave
+    description: Personnel leave and absence management
 paths:
   /healthz:
     get:
@@ -331,6 +333,128 @@ paths:
         "400":
           description: Already released
 
+  /leave:
+    get:
+      operationId: listLeave
+      tags: [leave]
+      summary: List all leave records
+      parameters:
+        - name: personnelId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pending, approved, rejected]
+      responses:
+        "200":
+          description: List of leave records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaveRecord"
+    post:
+      operationId: createLeave
+      tags: [leave]
+      summary: Create a new leave record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LeaveInput"
+      responses:
+        "201":
+          description: Leave record created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaveRecord"
+        "400":
+          description: Invalid input
+
+  /leave/active-today:
+    get:
+      operationId: getActiveLeavesToday
+      tags: [leave]
+      summary: Get all personnel currently on leave today
+      responses:
+        "200":
+          description: Personnel on leave today
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaveRecord"
+
+  /leave/{id}:
+    get:
+      operationId: getLeave
+      tags: [leave]
+      summary: Get a single leave record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Leave record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaveRecord"
+        "404":
+          description: Not found
+    put:
+      operationId: updateLeave
+      tags: [leave]
+      summary: Update a leave record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LeaveInput"
+      responses:
+        "200":
+          description: Updated leave record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaveRecord"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteLeave
+      tags: [leave]
+      summary: Delete a leave record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
 components:
   schemas:
     HealthStatus:
@@ -554,3 +678,53 @@ components:
           type: integer
         total:
           type: integer
+
+    LeaveRecord:
+      type: object
+      required: [id, personnelId, leaveType, startDate, endDate, status, createdAt]
+      properties:
+        id:
+          type: integer
+        personnelId:
+          type: integer
+        leaveType:
+          type: string
+          enum: [sick_leave, earned_leave, casual_leave, absent]
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        createdAt:
+          type: string
+          format: date-time
+        personnel:
+          $ref: "#/components/schemas/Personnel"
+
+    LeaveInput:
+      type: object
+      required: [personnelId, leaveType, startDate, endDate, status]
+      properties:
+        personnelId:
+          type: integer
+        leaveType:
+          type: string
+          enum: [sick_leave, earned_leave, casual_leave, absent]
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected]
