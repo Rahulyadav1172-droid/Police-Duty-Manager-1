@@ -36,6 +36,8 @@ import type {
   ListBiometricRecordsParams,
   ListLeaveParams,
   LiveBoard,
+  MessBooking,
+  MessBookingInput,
   Personnel,
   PersonnelInput,
   PersonnelUpdate,
@@ -2067,6 +2069,296 @@ export const useDeleteEvent = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDeleteEventMutationOptions(options));
+    }
+
+export const getListMessBookingsUrl = () => {
+
+
+
+
+  return `/api/mess-bookings`
+}
+
+/**
+ * @summary List all mess bookings
+ */
+export const listMessBookings = async ( options?: RequestInit): Promise<MessBooking[]> => {
+
+  return customFetch<MessBooking[]>(getListMessBookingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMessBookingsQueryKey = () => {
+    return [
+    `/api/mess-bookings`
+    ] as const;
+    }
+
+
+export const getListMessBookingsQueryOptions = <TData = Awaited<ReturnType<typeof listMessBookings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMessBookings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMessBookingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMessBookings>>> = ({ signal }) => listMessBookings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMessBookings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMessBookingsQueryResult = NonNullable<Awaited<ReturnType<typeof listMessBookings>>>
+export type ListMessBookingsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all mess bookings
+ */
+
+export function useListMessBookings<TData = Awaited<ReturnType<typeof listMessBookings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMessBookings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMessBookingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateMessBookingUrl = () => {
+
+
+
+
+  return `/api/mess-bookings`
+}
+
+/**
+ * @summary Create a new mess booking
+ */
+export const createMessBooking = async (messBookingInput: MessBookingInput, options?: RequestInit): Promise<MessBooking> => {
+
+  return customFetch<MessBooking>(getCreateMessBookingUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      messBookingInput,)
+  }
+);}
+
+
+
+
+export const getCreateMessBookingMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMessBooking>>, TError,{data: BodyType<MessBookingInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createMessBooking>>, TError,{data: BodyType<MessBookingInput>}, TContext> => {
+
+const mutationKey = ['createMessBooking'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMessBooking>>, {data: BodyType<MessBookingInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createMessBooking(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateMessBookingMutationResult = NonNullable<Awaited<ReturnType<typeof createMessBooking>>>
+    export type CreateMessBookingMutationBody = BodyType<MessBookingInput>
+    export type CreateMessBookingMutationError = ErrorType<void>
+
+    /**
+ * @summary Create a new mess booking
+ */
+export const useCreateMessBooking = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMessBooking>>, TError,{data: BodyType<MessBookingInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createMessBooking>>,
+        TError,
+        {data: BodyType<MessBookingInput>},
+        TContext
+      > => {
+      return useMutation(getCreateMessBookingMutationOptions(options));
+    }
+
+export const getUpdateMessBookingUrl = (id: number,) => {
+
+
+
+
+  return `/api/mess-bookings/${id}`
+}
+
+/**
+ * @summary Update a mess booking
+ */
+export const updateMessBooking = async (id: number,
+    messBookingInput: MessBookingInput, options?: RequestInit): Promise<MessBooking> => {
+
+  return customFetch<MessBooking>(getUpdateMessBookingUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      messBookingInput,)
+  }
+);}
+
+
+
+
+export const getUpdateMessBookingMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMessBooking>>, TError,{id: number;data: BodyType<MessBookingInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateMessBooking>>, TError,{id: number;data: BodyType<MessBookingInput>}, TContext> => {
+
+const mutationKey = ['updateMessBooking'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMessBooking>>, {id: number;data: BodyType<MessBookingInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateMessBooking(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateMessBookingMutationResult = NonNullable<Awaited<ReturnType<typeof updateMessBooking>>>
+    export type UpdateMessBookingMutationBody = BodyType<MessBookingInput>
+    export type UpdateMessBookingMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a mess booking
+ */
+export const useUpdateMessBooking = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMessBooking>>, TError,{id: number;data: BodyType<MessBookingInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateMessBooking>>,
+        TError,
+        {id: number;data: BodyType<MessBookingInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateMessBookingMutationOptions(options));
+    }
+
+export const getDeleteMessBookingUrl = (id: number,) => {
+
+
+
+
+  return `/api/mess-bookings/${id}`
+}
+
+/**
+ * @summary Delete a mess booking
+ */
+export const deleteMessBooking = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteMessBookingUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteMessBookingMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMessBooking>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMessBooking>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteMessBooking'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMessBooking>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteMessBooking(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMessBookingMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMessBooking>>>
+
+    export type DeleteMessBookingMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a mess booking
+ */
+export const useDeleteMessBooking = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMessBooking>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMessBooking>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteMessBookingMutationOptions(options));
     }
 
 export const getGetRosterRotationUrl = () => {

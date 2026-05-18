@@ -310,6 +310,68 @@ export interface EventUpdate {
   requiredHeadcount?: number;
 }
 
+export type MessBookingFoodApplicable = typeof MessBookingFoodApplicable[keyof typeof MessBookingFoodApplicable];
+
+
+export const MessBookingFoodApplicable = {
+  yes: 'yes',
+  no: 'no',
+} as const;
+
+export interface MessBooking {
+  id: number;
+  refNo: string;
+  guestName: string;
+  mobile: string;
+  rooms: string[];
+  checkInDate: string;
+  checkInTime: string;
+  checkOutDate: string;
+  checkOutTime: string;
+  /** @nullable */
+  rentPerDay?: number | null;
+  foodApplicable: MessBookingFoodApplicable;
+  /** @nullable */
+  foodCharge?: number | null;
+  totalDays: number;
+  totalRoomCharge: number;
+  createdAt: string;
+}
+
+export type MessBookingInputFoodApplicable = typeof MessBookingInputFoodApplicable[keyof typeof MessBookingInputFoodApplicable];
+
+
+export const MessBookingInputFoodApplicable = {
+  yes: 'yes',
+  no: 'no',
+} as const;
+
+export interface MessBookingInput {
+  /** @minLength 2 */
+  guestName: string;
+  /** @minLength 10 */
+  mobile: string;
+  /** @minItems 1 */
+  rooms: string[];
+  /** @minLength 1 */
+  checkInDate: string;
+  /** @minLength 1 */
+  checkInTime: string;
+  /** @minLength 1 */
+  checkOutDate: string;
+  /** @minLength 1 */
+  checkOutTime: string;
+  /** @minimum 1 */
+  rentPerDay?: number;
+  foodApplicable: MessBookingInputFoodApplicable;
+  /** @minimum 0 */
+  foodCharge?: number;
+  /** @minimum 0 */
+  totalDays: number;
+  /** @minimum 0 */
+  totalRoomCharge: number;
+}
+
 export interface RotationEntry {
   personnel: Personnel;
   /** @nullable */

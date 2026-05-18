@@ -4,3 +4,4 @@ export * from "./roster";
 export * from "./leave";
 export * from "./biometric-attendance";
 export * from "./events";
+export * from "./mess-bookings";

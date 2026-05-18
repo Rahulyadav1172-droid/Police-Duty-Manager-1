@@ -6,6 +6,7 @@ import rosterRouter from "./roster";
 import leaveRouter from "./leave";
 import biometricRouter from "./biometric";
 import eventsRouter from "./events";
+import messBookingsRouter from "./mess-bookings";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(rosterRouter);
 router.use(leaveRouter);
 router.use(biometricRouter);
 router.use(eventsRouter);
+router.use(messBookingsRouter);
 
 export default router;

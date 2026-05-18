@@ -22,6 +22,8 @@ tags:
     description: Biometric machine attendance records
   - name: events
     description: Special events and festival duty management
+  - name: mess-bookings
+    description: Officer's Mess / Smart Cell accommodation bookings
 paths:
   /healthz:
     get:
@@ -537,6 +539,84 @@ paths:
         "404":
           description: Not found
 
+  /mess-bookings:
+    get:
+      operationId: listMessBookings
+      tags: [mess-bookings]
+      summary: List all mess bookings
+      responses:
+        "200":
+          description: All mess bookings sorted by check-in date descending
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MessBooking"
+    post:
+      operationId: createMessBooking
+      tags: [mess-bookings]
+      summary: Create a new mess booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessBookingInput"
+      responses:
+        "201":
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessBooking"
+        "400":
+          description: Invalid input
+
+  /mess-bookings/{id}:
+    put:
+      operationId: updateMessBooking
+      tags: [mess-bookings]
+      summary: Update a mess booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessBookingInput"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessBooking"
+        "400":
+          description: Invalid input
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteMessBooking
+      tags: [mess-bookings]
+      summary: Delete a mess booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
   /roster/rotation:
     get:
       operationId: getRosterRotation
@@ -1021,6 +1101,88 @@ components:
         description:
           type: string
         requiredHeadcount:
+          type: integer
+          minimum: 0
+
+    MessBooking:
+      type: object
+      required: [id, refNo, guestName, mobile, rooms, checkInDate, checkInTime, checkOutDate, checkOutTime, foodApplicable, totalDays, totalRoomCharge, createdAt]
+      properties:
+        id:
+          type: integer
+        refNo:
+          type: string
+        guestName:
+          type: string
+        mobile:
+          type: string
+        rooms:
+          type: array
+          items:
+            type: string
+        checkInDate:
+          type: string
+        checkInTime:
+          type: string
+        checkOutDate:
+          type: string
+        checkOutTime:
+          type: string
+        rentPerDay:
+          type: ["integer", "null"]
+        foodApplicable:
+          type: string
+          enum: [yes, no]
+        foodCharge:
+          type: ["integer", "null"]
+        totalDays:
+          type: integer
+        totalRoomCharge:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    MessBookingInput:
+      type: object
+      required: [guestName, mobile, rooms, checkInDate, checkInTime, checkOutDate, checkOutTime, foodApplicable, totalDays, totalRoomCharge]
+      properties:
+        guestName:
+          type: string
+          minLength: 2
+        mobile:
+          type: string
+          minLength: 10
+        rooms:
+          type: array
+          items:
+            type: string
+          minItems: 1
+        checkInDate:
+          type: string
+          minLength: 1
+        checkInTime:
+          type: string
+          minLength: 1
+        checkOutDate:
+          type: string
+          minLength: 1
+        checkOutTime:
+          type: string
+          minLength: 1
+        rentPerDay:
+          type: integer
+          minimum: 1
+        foodApplicable:
+          type: string
+          enum: [yes, no]
+        foodCharge:
+          type: integer
+          minimum: 0
+        totalDays:
+          type: integer
+          minimum: 0
+        totalRoomCharge:
           type: integer
           minimum: 0
 

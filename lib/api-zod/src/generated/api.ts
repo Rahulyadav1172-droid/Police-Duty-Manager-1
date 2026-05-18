@@ -599,6 +599,133 @@ export const DeleteEventParams = zod.object({
 
 
 /**
+ * @summary List all mess bookings
+ */
+export const ListMessBookingsResponseItem = zod.object({
+  "id": zod.number(),
+  "refNo": zod.string(),
+  "guestName": zod.string(),
+  "mobile": zod.string(),
+  "rooms": zod.array(zod.string()),
+  "checkInDate": zod.string(),
+  "checkInTime": zod.string(),
+  "checkOutDate": zod.string(),
+  "checkOutTime": zod.string(),
+  "rentPerDay": zod.number().nullish(),
+  "foodApplicable": zod.enum(['yes', 'no']),
+  "foodCharge": zod.number().nullish(),
+  "totalDays": zod.number(),
+  "totalRoomCharge": zod.number(),
+  "createdAt": zod.coerce.date()
+})
+export const ListMessBookingsResponse = zod.array(ListMessBookingsResponseItem)
+
+
+/**
+ * @summary Create a new mess booking
+ */
+export const createMessBookingBodyGuestNameMin = 2;
+
+export const createMessBookingBodyMobileMin = 10;
+
+
+
+
+
+
+
+export const createMessBookingBodyFoodChargeMin = 0;
+
+export const createMessBookingBodyTotalDaysMin = 0;
+
+export const createMessBookingBodyTotalRoomChargeMin = 0;
+
+
+
+export const CreateMessBookingBody = zod.object({
+  "guestName": zod.string().min(createMessBookingBodyGuestNameMin),
+  "mobile": zod.string().min(createMessBookingBodyMobileMin),
+  "rooms": zod.array(zod.string()).min(1),
+  "checkInDate": zod.string().min(1),
+  "checkInTime": zod.string().min(1),
+  "checkOutDate": zod.string().min(1),
+  "checkOutTime": zod.string().min(1),
+  "rentPerDay": zod.number().min(1).optional(),
+  "foodApplicable": zod.enum(['yes', 'no']),
+  "foodCharge": zod.number().min(createMessBookingBodyFoodChargeMin).optional(),
+  "totalDays": zod.number().min(createMessBookingBodyTotalDaysMin),
+  "totalRoomCharge": zod.number().min(createMessBookingBodyTotalRoomChargeMin)
+})
+
+
+/**
+ * @summary Update a mess booking
+ */
+export const UpdateMessBookingParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const updateMessBookingBodyGuestNameMin = 2;
+
+export const updateMessBookingBodyMobileMin = 10;
+
+
+
+
+
+
+
+export const updateMessBookingBodyFoodChargeMin = 0;
+
+export const updateMessBookingBodyTotalDaysMin = 0;
+
+export const updateMessBookingBodyTotalRoomChargeMin = 0;
+
+
+
+export const UpdateMessBookingBody = zod.object({
+  "guestName": zod.string().min(updateMessBookingBodyGuestNameMin),
+  "mobile": zod.string().min(updateMessBookingBodyMobileMin),
+  "rooms": zod.array(zod.string()).min(1),
+  "checkInDate": zod.string().min(1),
+  "checkInTime": zod.string().min(1),
+  "checkOutDate": zod.string().min(1),
+  "checkOutTime": zod.string().min(1),
+  "rentPerDay": zod.number().min(1).optional(),
+  "foodApplicable": zod.enum(['yes', 'no']),
+  "foodCharge": zod.number().min(updateMessBookingBodyFoodChargeMin).optional(),
+  "totalDays": zod.number().min(updateMessBookingBodyTotalDaysMin),
+  "totalRoomCharge": zod.number().min(updateMessBookingBodyTotalRoomChargeMin)
+})
+
+export const UpdateMessBookingResponse = zod.object({
+  "id": zod.number(),
+  "refNo": zod.string(),
+  "guestName": zod.string(),
+  "mobile": zod.string(),
+  "rooms": zod.array(zod.string()),
+  "checkInDate": zod.string(),
+  "checkInTime": zod.string(),
+  "checkOutDate": zod.string(),
+  "checkOutTime": zod.string(),
+  "rentPerDay": zod.number().nullish(),
+  "foodApplicable": zod.enum(['yes', 'no']),
+  "foodCharge": zod.number().nullish(),
+  "totalDays": zod.number(),
+  "totalRoomCharge": zod.number(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a mess booking
+ */
+export const DeleteMessBookingParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
  * @summary Get duty rotation fairness data (last duty per personnel)
  */
 export const GetRosterRotationResponseItem = zod.object({

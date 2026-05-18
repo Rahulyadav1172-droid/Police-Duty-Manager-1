@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   format, differenceInDays, parseISO,
   startOfMonth, endOfMonth, eachDayOfInterval,
@@ -21,10 +22,18 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import {
+  useListMessBookings,
+  useCreateMessBooking,
+  useUpdateMessBooking,
+  useDeleteMessBooking,
+  getListMessBookingsQueryKey,
+  type MessBooking,
+} from "@workspace/api-client-react";
 
 const ROOMS = ["Suite - 1", "Suite - 2", "Suite - 3", "Suite - 4"] as const;
 type RoomName = typeof ROOMS[number];
-const STORAGE_KEY = "apl_mess_bookings";
+type Booking = MessBooking;
 
 const bookingSchema = z.object({
   guestName:      z.string().min(2, "Name must be at least 2 characters"),
@@ -44,34 +53,6 @@ const bookingSchema = z.object({
 });
 
 type BookingForm = z.infer<typeof bookingSchema>;
-
-interface Booking extends BookingForm {
-  id: string;
-  refNo: string;
-  createdAt: string;
-  totalDays: number;
-  totalRoomCharge: number;
-}
-
-function loadBookings(): Booking[] {
-  try {
-    const raw: (Booking & { room?: string })[] = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
-    return raw.map((b) => ({
-      ...b,
-      rooms: b.rooms ?? (b.room ? [b.room as RoomName] : (["Suite - 1"] as RoomName[])),
-    }));
-  } catch { return []; }
-}
-
-function saveBookings(b: Booking[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(b));
-}
-
-function nextRefNo(bookings: Booking[]): string {
-  const year = new Date().getFullYear();
-  const seq = bookings.filter((b) => b.refNo.includes(`/${year}/`)).length + 1;
-  return `APL/MESS/${year}/${String(seq).padStart(3, "0")}`;
-}
 
 function calcDays(checkIn: string, checkOut: string): number {
   if (!checkIn || !checkOut) return 0;
@@ -476,9 +457,46 @@ export default function MessBooking() {
   const { logout } = useAuth();
   const { toast } = useToast();
 
-  const [bookings, setBookings]     = useState<Booking[]>(loadBookings);
+  const queryClient = useQueryClient();
+  const { data: bookings = [], isLoading } = useListMessBookings();
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: getListMessBookingsQueryKey() });
+
+  const createMutation = useCreateMessBooking({
+    mutation: {
+      onSuccess: (newBooking) => {
+        invalidate();
+        setFormOpen(false);
+        reset();
+        toast({ title: "Booking confirmed", description: `Ref: ${newBooking.refNo}` });
+        printLetter(newBooking);
+      },
+      onError: () => toast({ title: "Failed to save booking", variant: "destructive" }),
+    },
+  });
+
+  const updateMutation = useUpdateMessBooking({
+    mutation: {
+      onSuccess: (updated) => {
+        invalidate();
+        setFormOpen(false);
+        setEditingId(null);
+        reset();
+        toast({ title: "Booking updated", description: `Ref: ${updated.refNo}` });
+      },
+      onError: () => toast({ title: "Failed to update booking", variant: "destructive" }),
+    },
+  });
+
+  const deleteMutation = useDeleteMessBooking({
+    mutation: {
+      onSuccess: () => { invalidate(); toast({ title: "Booking deleted" }); },
+      onError: () => toast({ title: "Failed to delete", variant: "destructive" }),
+    },
+  });
+
   const [formOpen, setFormOpen]     = useState(false);
-  const [editingId, setEditingId]   = useState<string | null>(null);
+  const [editingId, setEditingId]   = useState<number | null>(null);
   const [activeTab, setActiveTab]   = useState<"dashboard" | "records" | "availability" | "history">("dashboard");
   const [calMonth, setCalMonth]     = useState(new Date());
   const [searchQuery, setSearchQuery] = useState("");
@@ -527,50 +545,39 @@ export default function MessBooking() {
       checkInTime: b.checkInTime,
       checkOutDate: b.checkOutDate,
       checkOutTime: b.checkOutTime,
-      rentPerDay: b.rentPerDay,
+      rentPerDay: b.rentPerDay ?? undefined,
       foodApplicable: b.foodApplicable,
-      foodCharge: b.foodCharge,
+      foodCharge: b.foodCharge ?? undefined,
     });
     setEditingId(b.id);
     setFormOpen(true);
   }
 
   function onSubmit(data: BookingForm) {
-    if (editingId) {
-      const days = calcDays(data.checkInDate, data.checkOutDate);
-      const updated = bookings.map((b) =>
-        b.id === editingId
-          ? { ...b, ...data, totalDays: days, totalRoomCharge: (data.rentPerDay ?? 0) * days }
-          : b,
-      );
-      saveBookings(updated);
-      setBookings(updated);
-      toast({ title: "Booking updated", description: `Ref: ${updated.find(b => b.id === editingId)?.refNo}` });
-      setEditingId(null);
+    const days = calcDays(data.checkInDate, data.checkOutDate);
+    const payload = {
+      guestName: data.guestName,
+      mobile: data.mobile,
+      rooms: data.rooms as string[],
+      checkInDate: data.checkInDate,
+      checkInTime: data.checkInTime,
+      checkOutDate: data.checkOutDate,
+      checkOutTime: data.checkOutTime,
+      rentPerDay: data.rentPerDay,
+      foodApplicable: data.foodApplicable,
+      foodCharge: data.foodCharge,
+      totalDays: days,
+      totalRoomCharge: (data.rentPerDay ?? 0) * days,
+    };
+    if (editingId !== null) {
+      updateMutation.mutate({ id: editingId, data: payload });
     } else {
-      const newBooking: Booking = {
-        ...data,
-        id: crypto.randomUUID(),
-        refNo: nextRefNo(bookings),
-        createdAt: new Date().toISOString(),
-        totalDays,
-        totalRoomCharge,
-      };
-      const updated = [newBooking, ...bookings];
-      saveBookings(updated);
-      setBookings(updated);
-      toast({ title: "Booking confirmed", description: `Ref: ${newBooking.refNo}` });
-      printLetter(newBooking);
+      createMutation.mutate({ data: payload });
     }
-    reset();
-    setFormOpen(false);
   }
 
-  function deleteBooking(id: string) {
-    const updated = bookings.filter((b) => b.id !== id);
-    saveBookings(updated);
-    setBookings(updated);
-    toast({ title: "Booking deleted" });
+  function deleteBooking(id: number) {
+    deleteMutation.mutate({ id });
   }
 
   const filteredBookings = useMemo(() => {
