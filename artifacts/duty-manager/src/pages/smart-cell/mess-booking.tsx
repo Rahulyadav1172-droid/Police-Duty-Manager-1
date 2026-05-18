@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
+import jsPDF from "jspdf";
 import {
   format, differenceInDays, parseISO,
   startOfMonth, endOfMonth, eachDayOfInterval,
@@ -305,7 +306,116 @@ function printLetter(b: Booking) {
   if (win) { win.document.write(html); win.document.close(); }
 }
 
-function shareWhatsApp(b: Booking) {
+function generateBookingPDF(b: Booking): Blob {
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const W = 210;
+  const M = 15;                              // side margin
+  const NAVY: [number, number, number] = [15,  40, 89];
+  const GOLD: [number, number, number] = [200, 150, 12];
+  const WHITE: [number, number, number] = [255, 255, 255];
+  const DARK: [number, number, number] = [30,  30, 30];
+  const GRAY: [number, number, number] = [80,  80, 80];
+  const RULE: [number, number, number] = [200, 200, 210];
+
+  // ── Top decorative stripe ──────────────────────────────────────────
+  doc.setFillColor(...NAVY); doc.rect(0, 0, W, 4, "F");
+  doc.setFillColor(...GOLD); doc.rect(0, 4, W, 2, "F");
+
+  // ── Navy header band ───────────────────────────────────────────────
+  doc.setFillColor(...NAVY); doc.rect(0, 6, W, 28, "F");
+  doc.setTextColor(...WHITE);
+  doc.setFontSize(14); doc.setFont("helvetica", "bold");
+  doc.text("POLICE OFFICERS' GUEST HOUSE", W / 2, 18, { align: "center" });
+  doc.setFontSize(9);  doc.setFont("helvetica", "normal");
+  doc.text("Ayodhya Police Line, Uttar Pradesh  |  Booking Confirmation", W / 2, 26, { align: "center" });
+
+  // ── Gold separator ─────────────────────────────────────────────────
+  doc.setFillColor(...GOLD); doc.rect(0, 34, W, 2, "F");
+
+  // ── Ref No / Date row ──────────────────────────────────────────────
+  let y = 46;
+  doc.setTextColor(...NAVY); doc.setFontSize(11); doc.setFont("helvetica", "bold");
+  doc.text(`Ref No: ${b.refNo}`, M, y);
+  doc.setTextColor(...GRAY); doc.setFontSize(9); doc.setFont("helvetica", "normal");
+  doc.text(`Date: ${fmtDate(b.createdAt.split("T")[0])}`, W - M, y, { align: "right" });
+
+  y += 5;
+  doc.setDrawColor(...RULE); doc.setLineWidth(0.3);
+  doc.line(M, y, W - M, y);
+  y += 8;
+
+  // ── Helper: section heading ────────────────────────────────────────
+  function sectionHead(title: string) {
+    doc.setTextColor(...NAVY); doc.setFontSize(9); doc.setFont("helvetica", "bold");
+    doc.text(title, M, y);
+    y += 6;
+  }
+
+  // ── Helper: label + value row ──────────────────────────────────────
+  function row(label: string, value: string) {
+    doc.setTextColor(...DARK); doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");  doc.text(`${label}:`, M + 2, y);
+    doc.setFont("helvetica", "normal"); doc.text(value, M + 38, y);
+    y += 7;
+  }
+
+  // ── GUEST DETAILS ──────────────────────────────────────────────────
+  sectionHead("GUEST DETAILS");
+  row("Name",     b.guestName);
+  row("Mobile",   b.mobile);
+  row("Suite(s)", b.rooms.join(", "));
+
+  y += 2;
+  doc.setDrawColor(...RULE); doc.line(M, y, W - M, y); y += 8;
+
+  // ── STAY DETAILS ───────────────────────────────────────────────────
+  sectionHead("STAY DETAILS");
+  row("Check-in",  `${fmtDate(b.checkInDate)} at ${fmtTime(b.checkInTime)}`);
+  row("Check-out", `${fmtDate(b.checkOutDate)} at ${fmtTime(b.checkOutTime)}`);
+  row("Duration",  `${b.totalDays} day${b.totalDays !== 1 ? "s" : ""}`);
+
+  y += 2;
+  doc.setDrawColor(...RULE); doc.line(M, y, W - M, y); y += 8;
+
+  // ── CHARGES ────────────────────────────────────────────────────────
+  sectionHead("CHARGES");
+  if (b.rentPerDay) {
+    row("Room Rent",
+      `Rs. ${b.rentPerDay.toLocaleString("en-IN")}/day x ${b.totalDays} day${b.totalDays !== 1 ? "s" : ""} = Rs. ${b.totalRoomCharge.toLocaleString("en-IN")}`);
+  }
+  row("Food", b.foodApplicable === "yes" ? "Applicable" : "Not Applicable");
+  if (b.foodCharge) {
+    row("Food Charge", `Rs. ${b.foodCharge.toLocaleString("en-IN")}`);
+  }
+
+  y += 5;
+  doc.setDrawColor(...RULE); doc.line(M, y, W - M, y); y += 10;
+
+  // ── Contact note ───────────────────────────────────────────────────
+  doc.setTextColor(...GRAY); doc.setFontSize(8.5); doc.setFont("helvetica", "italic");
+  doc.text("Contact: Sub-Inspector Yadunath — 8317041684", M, y);
+  doc.text("We look forward to welcoming you.", M, y + 6);
+
+  // ── Signature block (right-aligned) ───────────────────────────────
+  const sigCx = W - M - 27;
+  y += 22;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(...DARK);
+  doc.text("Authorised by", sigCx, y, { align: "center" });
+  y += 20;
+  doc.setDrawColor(...DARK); doc.setLineWidth(0.4);
+  doc.line(sigCx - 27, y, sigCx + 27, y);
+  y += 5;
+  doc.setFont("helvetica", "bold"); doc.setFontSize(9);
+  doc.text("Superintendent of Police, Ayodhya", sigCx, y, { align: "center" });
+
+  // ── Bottom decorative stripe ───────────────────────────────────────
+  doc.setFillColor(...GOLD); doc.rect(0, 287, W, 2, "F");
+  doc.setFillColor(...NAVY); doc.rect(0, 289, W, 8, "F");
+
+  return doc.output("blob");
+}
+
+async function shareWhatsApp(b: Booking): Promise<void> {
   const msg =
     `*पुलिस ऑफिसर्स गेस्ट हाउस, अयोध्या पुलिस लाइन*\n` +
     `*Booking Confirmed ✅*\n\n` +
@@ -315,10 +425,31 @@ function shareWhatsApp(b: Booking) {
     `Check-in:  ${fmtDate(b.checkInDate)} at ${fmtTime(b.checkInTime)}\n` +
     `Check-out: ${fmtDate(b.checkOutDate)} at ${fmtTime(b.checkOutTime)}\n` +
     `Stay: ${b.totalDays} day(s)\n` +
-    `${b.rentPerDay ? `Rent/day: ₹${b.rentPerDay.toLocaleString("en-IN")}\n` : ""}` +
+    `${b.rentPerDay ? `Rent/day: Rs.${b.rentPerDay.toLocaleString("en-IN")}\n` : ""}` +
     `Food: ${b.foodApplicable === "yes" ? "Applicable" : "Not Applicable"}\n\n` +
     `Contact: उ0नि0 यदुनाथ — 8317041684\n` +
     `हम आपके स्वागत के लिए उत्सुक हैं 🙏`;
+
+  const pdfBlob = generateBookingPDF(b);
+  const fileName = `Booking_${b.refNo.replace(/\//g, "_")}.pdf`;
+  const pdfFile  = new File([pdfBlob], fileName, { type: "application/pdf" });
+
+  // ── Mobile: native share sheet (can send directly to WhatsApp) ────
+  if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+    try {
+      await navigator.share({ files: [pdfFile], title: `Booking ${b.refNo}`, text: msg });
+      return;
+    } catch {
+      // User cancelled (AbortError) or not supported — fall through
+    }
+  }
+
+  // ── Desktop fallback: download PDF + open WhatsApp Web ────────────
+  const blobUrl = URL.createObjectURL(pdfBlob);
+  const a = document.createElement("a");
+  a.href = blobUrl; a.download = fileName;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
 
   window.open(
     `https://wa.me/91${b.mobile}?text=${encodeURIComponent(msg)}`,
@@ -468,8 +599,9 @@ export default function MessBooking() {
         invalidate();
         setFormOpen(false);
         reset();
-        toast({ title: "Booking confirmed", description: `Ref: ${newBooking.refNo}` });
+        toast({ title: "Booking confirmed", description: `Ref: ${newBooking.refNo} — PDF downloading, WhatsApp opening…` });
         printLetter(newBooking);
+        void shareWhatsApp(newBooking);
       },
       onError: () => toast({ title: "Failed to save booking", variant: "destructive" }),
     },
