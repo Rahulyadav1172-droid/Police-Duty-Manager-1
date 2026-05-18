@@ -444,17 +444,12 @@ async function shareWhatsApp(b: Booking): Promise<void> {
     }
   }
 
-  // ── Desktop fallback: download PDF + open WhatsApp Web ────────────
+  // ── Desktop fallback: just download the PDF ───────────────────────
   const blobUrl = URL.createObjectURL(pdfBlob);
   const a = document.createElement("a");
   a.href = blobUrl; a.download = fileName;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
-
-  window.open(
-    `https://wa.me/91${b.mobile}?text=${encodeURIComponent(msg)}`,
-    "_blank",
-  );
 }
 
 function printSummary(bookings: Booking[]) {
@@ -599,7 +594,7 @@ export default function MessBooking() {
         invalidate();
         setFormOpen(false);
         reset();
-        toast({ title: "Booking confirmed", description: `Ref: ${newBooking.refNo} — PDF downloading, WhatsApp opening…` });
+        toast({ title: "Booking confirmed", description: `Ref: ${newBooking.refNo} — PDF downloading…` });
         printLetter(newBooking);
         void shareWhatsApp(newBooking);
       },
