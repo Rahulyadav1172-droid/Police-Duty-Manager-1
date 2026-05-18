@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 import { Layout } from "@/components/layout";
 import LoginPage from "@/pages/login";
 import MessBooking from "@/pages/smart-cell/mess-booking";
+import SspOffice from "@/pages/ssp-office";
 import { AuthContext, useAuthState, useAuth } from "@/hooks/use-auth";
 
 import LiveBoard from "@/pages/live-board";
@@ -50,6 +51,7 @@ function AdminRouter() {
 function AppContent() {
   const { role } = useAuth();
   if (role === "smart-cell") return <MessBooking />;
+  if (role === "ssp-office") return <SspOffice />;
   return <AdminRouter />;
 }
 

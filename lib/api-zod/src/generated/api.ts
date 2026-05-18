@@ -838,3 +838,170 @@ export const DeleteLeaveParams = zod.object({
 })
 
 
+/**
+ * @summary List all employee profiles
+ */
+export const ListEmployeeProfilesQueryParams = zod.object({
+  "pno": zod.coerce.string().optional().describe('Filter by PNO number (exact match)')
+})
+
+export const ListEmployeeProfilesResponseItem = zod.object({
+  "id": zod.number(),
+  "pno": zod.string(),
+  "name": zod.string(),
+  "mobileNumber": zod.string(),
+  "fatherName": zod.string(),
+  "motherName": zod.string(),
+  "gender": zod.enum(['Male', 'Female', 'Other']),
+  "dob": zod.string(),
+  "dateOfJoining": zod.string(),
+  "dateOfCurrentPosting": zod.string(),
+  "rank": zod.string(),
+  "ehrmsCode": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "characterRollPhotoUrl": zod.string().nullish(),
+  "permanentAddress": zod.string().nullish(),
+  "pinCode": zod.string().nullish(),
+  "policeStation": zod.string().nullish(),
+  "homeDistrict": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListEmployeeProfilesResponse = zod.array(ListEmployeeProfilesResponseItem)
+
+
+/**
+ * @summary Create a new employee profile
+ */
+
+
+export const createEmployeeProfileBodyMobileNumberMin = 10;
+
+
+
+
+
+
+
+
+
+export const CreateEmployeeProfileBody = zod.object({
+  "pno": zod.string().min(1),
+  "name": zod.string().min(1),
+  "mobileNumber": zod.string().min(createEmployeeProfileBodyMobileNumberMin),
+  "fatherName": zod.string().min(1),
+  "motherName": zod.string().min(1),
+  "gender": zod.enum(['Male', 'Female', 'Other']),
+  "dob": zod.string().min(1),
+  "dateOfJoining": zod.string().min(1),
+  "dateOfCurrentPosting": zod.string().min(1),
+  "rank": zod.string().min(1),
+  "ehrmsCode": zod.string().optional(),
+  "photoUrl": zod.string().optional(),
+  "characterRollPhotoUrl": zod.string().optional(),
+  "permanentAddress": zod.string().optional(),
+  "pinCode": zod.string().optional(),
+  "policeStation": zod.string().optional(),
+  "homeDistrict": zod.string().optional()
+})
+
+
+/**
+ * @summary Get employee profile by ID
+ */
+export const GetEmployeeProfileParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetEmployeeProfileResponse = zod.object({
+  "id": zod.number(),
+  "pno": zod.string(),
+  "name": zod.string(),
+  "mobileNumber": zod.string(),
+  "fatherName": zod.string(),
+  "motherName": zod.string(),
+  "gender": zod.enum(['Male', 'Female', 'Other']),
+  "dob": zod.string(),
+  "dateOfJoining": zod.string(),
+  "dateOfCurrentPosting": zod.string(),
+  "rank": zod.string(),
+  "ehrmsCode": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "characterRollPhotoUrl": zod.string().nullish(),
+  "permanentAddress": zod.string().nullish(),
+  "pinCode": zod.string().nullish(),
+  "policeStation": zod.string().nullish(),
+  "homeDistrict": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update employee profile
+ */
+export const UpdateEmployeeProfileParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+export const updateEmployeeProfileBodyMobileNumberMin = 10;
+
+
+
+
+
+
+
+
+
+export const UpdateEmployeeProfileBody = zod.object({
+  "pno": zod.string().min(1),
+  "name": zod.string().min(1),
+  "mobileNumber": zod.string().min(updateEmployeeProfileBodyMobileNumberMin),
+  "fatherName": zod.string().min(1),
+  "motherName": zod.string().min(1),
+  "gender": zod.enum(['Male', 'Female', 'Other']),
+  "dob": zod.string().min(1),
+  "dateOfJoining": zod.string().min(1),
+  "dateOfCurrentPosting": zod.string().min(1),
+  "rank": zod.string().min(1),
+  "ehrmsCode": zod.string().optional(),
+  "photoUrl": zod.string().optional(),
+  "characterRollPhotoUrl": zod.string().optional(),
+  "permanentAddress": zod.string().optional(),
+  "pinCode": zod.string().optional(),
+  "policeStation": zod.string().optional(),
+  "homeDistrict": zod.string().optional()
+})
+
+export const UpdateEmployeeProfileResponse = zod.object({
+  "id": zod.number(),
+  "pno": zod.string(),
+  "name": zod.string(),
+  "mobileNumber": zod.string(),
+  "fatherName": zod.string(),
+  "motherName": zod.string(),
+  "gender": zod.enum(['Male', 'Female', 'Other']),
+  "dob": zod.string(),
+  "dateOfJoining": zod.string(),
+  "dateOfCurrentPosting": zod.string(),
+  "rank": zod.string(),
+  "ehrmsCode": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "characterRollPhotoUrl": zod.string().nullish(),
+  "permanentAddress": zod.string().nullish(),
+  "pinCode": zod.string().nullish(),
+  "policeStation": zod.string().nullish(),
+  "homeDistrict": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete an employee profile
+ */
+export const DeleteEmployeeProfileParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+

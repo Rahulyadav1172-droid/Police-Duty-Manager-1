@@ -415,6 +415,82 @@ export interface LeaveInput {
   status: LeaveInputStatus;
 }
 
+export type EmployeeProfileGender = typeof EmployeeProfileGender[keyof typeof EmployeeProfileGender];
+
+
+export const EmployeeProfileGender = {
+  Male: 'Male',
+  Female: 'Female',
+  Other: 'Other',
+} as const;
+
+export interface EmployeeProfile {
+  id: number;
+  pno: string;
+  name: string;
+  mobileNumber: string;
+  fatherName: string;
+  motherName: string;
+  gender: EmployeeProfileGender;
+  dob: string;
+  dateOfJoining: string;
+  dateOfCurrentPosting: string;
+  rank: string;
+  /** @nullable */
+  ehrmsCode?: string | null;
+  /** @nullable */
+  photoUrl?: string | null;
+  /** @nullable */
+  characterRollPhotoUrl?: string | null;
+  /** @nullable */
+  permanentAddress?: string | null;
+  /** @nullable */
+  pinCode?: string | null;
+  /** @nullable */
+  policeStation?: string | null;
+  /** @nullable */
+  homeDistrict?: string | null;
+  createdAt: string;
+}
+
+export type EmployeeProfileInputGender = typeof EmployeeProfileInputGender[keyof typeof EmployeeProfileInputGender];
+
+
+export const EmployeeProfileInputGender = {
+  Male: 'Male',
+  Female: 'Female',
+  Other: 'Other',
+} as const;
+
+export interface EmployeeProfileInput {
+  /** @minLength 1 */
+  pno: string;
+  /** @minLength 1 */
+  name: string;
+  /** @minLength 10 */
+  mobileNumber: string;
+  /** @minLength 1 */
+  fatherName: string;
+  /** @minLength 1 */
+  motherName: string;
+  gender: EmployeeProfileInputGender;
+  /** @minLength 1 */
+  dob: string;
+  /** @minLength 1 */
+  dateOfJoining: string;
+  /** @minLength 1 */
+  dateOfCurrentPosting: string;
+  /** @minLength 1 */
+  rank: string;
+  ehrmsCode?: string;
+  photoUrl?: string;
+  characterRollPhotoUrl?: string;
+  permanentAddress?: string;
+  pinCode?: string;
+  policeStation?: string;
+  homeDistrict?: string;
+}
+
 export type ListLeaveParams = {
 personnelId?: number;
 status?: ListLeaveStatus;
@@ -442,5 +518,12 @@ export type GetRosterTrendsParams = {
  * Number of past days to include. Defaults to 7.
  */
 days?: number;
+};
+
+export type ListEmployeeProfilesParams = {
+/**
+ * Filter by PNO number (exact match)
+ */
+pno?: string;
 };
 

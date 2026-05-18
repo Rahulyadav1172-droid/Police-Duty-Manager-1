@@ -24,6 +24,8 @@ tags:
     description: Special events and festival duty management
   - name: mess-bookings
     description: Officer's Mess / Smart Cell accommodation bookings
+  - name: employee-profiles
+    description: SSP Office employee profile management
 paths:
   /healthz:
     get:
@@ -732,6 +734,109 @@ paths:
         "404":
           description: Not found
 
+  /employee-profiles:
+    get:
+      operationId: listEmployeeProfiles
+      tags: [employee-profiles]
+      summary: List all employee profiles
+      parameters:
+        - name: pno
+          in: query
+          schema:
+            type: string
+          description: Filter by PNO number (exact match)
+      responses:
+        "200":
+          description: List of employee profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EmployeeProfile"
+    post:
+      operationId: createEmployeeProfile
+      tags: [employee-profiles]
+      summary: Create a new employee profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeProfileInput"
+      responses:
+        "201":
+          description: Profile created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmployeeProfile"
+        "400":
+          description: Invalid input
+        "409":
+          description: PNO already exists
+
+  /employee-profiles/{id}:
+    get:
+      operationId: getEmployeeProfile
+      tags: [employee-profiles]
+      summary: Get employee profile by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Employee profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmployeeProfile"
+        "404":
+          description: Not found
+    put:
+      operationId: updateEmployeeProfile
+      tags: [employee-profiles]
+      summary: Update employee profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeProfileInput"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmployeeProfile"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteEmployeeProfile
+      tags: [employee-profiles]
+      summary: Delete an employee profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
 components:
   schemas:
     HealthStatus:
@@ -1232,3 +1337,97 @@ components:
         status:
           type: string
           enum: [pending, approved, rejected]
+
+    EmployeeProfile:
+      type: object
+      required: [id, pno, name, mobileNumber, fatherName, motherName, gender, dob, dateOfJoining, dateOfCurrentPosting, rank, createdAt]
+      properties:
+        id:
+          type: integer
+        pno:
+          type: string
+        name:
+          type: string
+        mobileNumber:
+          type: string
+        fatherName:
+          type: string
+        motherName:
+          type: string
+        gender:
+          type: string
+          enum: [Male, Female, Other]
+        dob:
+          type: string
+        dateOfJoining:
+          type: string
+        dateOfCurrentPosting:
+          type: string
+        rank:
+          type: string
+        ehrmsCode:
+          type: ["string", "null"]
+        photoUrl:
+          type: ["string", "null"]
+        characterRollPhotoUrl:
+          type: ["string", "null"]
+        permanentAddress:
+          type: ["string", "null"]
+        pinCode:
+          type: ["string", "null"]
+        policeStation:
+          type: ["string", "null"]
+        homeDistrict:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    EmployeeProfileInput:
+      type: object
+      required: [pno, name, mobileNumber, fatherName, motherName, gender, dob, dateOfJoining, dateOfCurrentPosting, rank]
+      properties:
+        pno:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        mobileNumber:
+          type: string
+          minLength: 10
+        fatherName:
+          type: string
+          minLength: 1
+        motherName:
+          type: string
+          minLength: 1
+        gender:
+          type: string
+          enum: [Male, Female, Other]
+        dob:
+          type: string
+          minLength: 1
+        dateOfJoining:
+          type: string
+          minLength: 1
+        dateOfCurrentPosting:
+          type: string
+          minLength: 1
+        rank:
+          type: string
+          minLength: 1
+        ehrmsCode:
+          type: string
+        photoUrl:
+          type: string
+        characterRollPhotoUrl:
+          type: string
+        permanentAddress:
+          type: string
+        pinCode:
+          type: string
+        policeStation:
+          type: string
+        homeDistrict:
+          type: string

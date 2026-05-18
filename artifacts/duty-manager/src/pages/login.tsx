@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, EyeOff, Lock, RefreshCw, ShieldCheck, Cpu, Clock } from "lucide-react";
+import { Eye, EyeOff, Lock, RefreshCw, ShieldCheck, Cpu, Clock, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,7 @@ export default function LoginPage() {
   const { toast } = useToast();
 
   const [selectedRole, setSelectedRole] = useState<UserRole>("admin");
+  const isSsp = selectedRole === "ssp-office";
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -69,6 +70,7 @@ export default function LoginPage() {
   }
 
   const isAdmin = selectedRole === "admin";
+  const accentColor = isAdmin ? "blue" : isSsp ? "purple" : "emerald";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center p-4">
@@ -94,62 +96,84 @@ export default function LoginPage() {
         )}
 
         {/* Role selector */}
-        <div className="grid grid-cols-2 gap-3 mb-5">
+        <div className="grid grid-cols-3 gap-3 mb-5">
           <button
             type="button"
             onClick={() => handleRoleSwitch("admin")}
-            className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+            className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
               isAdmin
                 ? "border-blue-500 bg-blue-600/20 text-white"
                 : "border-white/10 bg-white/5 text-white/50 hover:border-white/20 hover:text-white/70"
             }`}
           >
-            <ShieldCheck className={`w-6 h-6 ${isAdmin ? "text-blue-400" : "text-white/40"}`} />
+            <ShieldCheck className={`w-5 h-5 ${isAdmin ? "text-blue-400" : "text-white/40"}`} />
             <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-wide">गणना कार्यालय</p>
-              <p className="text-[10px] text-white/50 mt-0.5">LOG IN</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide">गणना कार्यालय</p>
+              <p className="text-[9px] text-white/50 mt-0.5">LOG IN</p>
             </div>
           </button>
 
           <button
             type="button"
             onClick={() => handleRoleSwitch("smart-cell")}
-            className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-              !isAdmin
+            className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
+              selectedRole === "smart-cell"
                 ? "border-emerald-500 bg-emerald-600/20 text-white"
                 : "border-white/10 bg-white/5 text-white/50 hover:border-white/20 hover:text-white/70"
             }`}
           >
-            <Cpu className={`w-6 h-6 ${!isAdmin ? "text-emerald-400" : "text-white/40"}`} />
+            <Cpu className={`w-5 h-5 ${selectedRole === "smart-cell" ? "text-emerald-400" : "text-white/40"}`} />
             <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-wide">Smart Cell</p>
-              <p className="text-[10px] text-white/50 mt-0.5">Admin</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide">Smart Cell</p>
+              <p className="text-[9px] text-white/50 mt-0.5">Admin</p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleRoleSwitch("ssp-office")}
+            className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
+              isSsp
+                ? "border-purple-500 bg-purple-600/20 text-white"
+                : "border-white/10 bg-white/5 text-white/50 hover:border-white/20 hover:text-white/70"
+            }`}
+          >
+            <Building2 className={`w-5 h-5 ${isSsp ? "text-purple-400" : "text-white/40"}`} />
+            <div className="text-center">
+              <p className="text-[10px] font-bold uppercase tracking-wide">SSP Office</p>
+              <p className="text-[9px] text-white/50 mt-0.5">Portal</p>
             </div>
           </button>
         </div>
 
         {/* Card */}
         <div className={`backdrop-blur-sm border rounded-2xl p-8 shadow-2xl transition-colors ${
-          isAdmin
-            ? "bg-white/5 border-white/10"
-            : "bg-emerald-950/20 border-emerald-500/20"
+          isAdmin ? "bg-white/5 border-white/10"
+          : isSsp ? "bg-purple-950/20 border-purple-500/20"
+          : "bg-emerald-950/20 border-emerald-500/20"
         }`}>
           {/* Username display */}
           <div className="mb-6">
-            <p className={`text-xs font-semibold uppercase tracking-widest mb-1.5 ${isAdmin ? "text-blue-300" : "text-emerald-300"}`}>
+            <p className={`text-xs font-semibold uppercase tracking-widest mb-1.5 ${
+              isAdmin ? "text-blue-300" : isSsp ? "text-purple-300" : "text-emerald-300"
+            }`}>
               Username
             </p>
             <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-4 py-3">
-              <Lock className={`w-4 h-4 shrink-0 ${isAdmin ? "text-blue-400" : "text-emerald-400"}`} />
+              <Lock className={`w-4 h-4 shrink-0 ${
+                isAdmin ? "text-blue-400" : isSsp ? "text-purple-400" : "text-emerald-400"
+              }`} />
               <span className="text-white font-semibold text-sm">
-                {isAdmin ? "Ayodhya Police Line" : "Smart Cell"}
+                {isAdmin ? "Ayodhya Police Line" : isSsp ? "SSP Office" : "Smart Cell"}
               </span>
             </div>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <Label className={`text-xs font-semibold uppercase tracking-widest mb-1.5 block ${isAdmin ? "text-blue-300" : "text-emerald-300"}`}>
+              <Label className={`text-xs font-semibold uppercase tracking-widest mb-1.5 block ${
+                isAdmin ? "text-blue-300" : isSsp ? "text-purple-300" : "text-emerald-300"
+              }`}>
                 Password
               </Label>
               <div className="relative">
@@ -159,9 +183,9 @@ export default function LoginPage() {
                   onChange={(e) => { setPassword(e.target.value); setError(""); }}
                   placeholder="Enter your password"
                   className={`bg-white/5 border-white/10 text-white placeholder:text-white/30 pr-11 ${
-                    isAdmin
-                      ? "focus-visible:ring-blue-500 focus-visible:border-blue-500"
-                      : "focus-visible:ring-emerald-500 focus-visible:border-emerald-500"
+                    isAdmin ? "focus-visible:ring-blue-500 focus-visible:border-blue-500"
+                    : isSsp ? "focus-visible:ring-purple-500 focus-visible:border-purple-500"
+                    : "focus-visible:ring-emerald-500 focus-visible:border-emerald-500"
                   }`}
                   autoFocus
                   required
@@ -185,9 +209,9 @@ export default function LoginPage() {
             <Button
               type="submit"
               className={`w-full font-semibold h-11 text-base shadow-lg ${
-                isAdmin
-                  ? "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/40"
-                  : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/40"
+                isAdmin ? "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/40"
+                : isSsp ? "bg-purple-600 hover:bg-purple-500 text-white shadow-purple-900/40"
+                : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/40"
               }`}
               disabled={isLoading || !password}
             >
@@ -200,7 +224,9 @@ export default function LoginPage() {
               type="button"
               onClick={() => setResetOpen(true)}
               className={`text-xs transition-colors inline-flex items-center gap-1.5 ${
-                isAdmin ? "text-blue-400 hover:text-blue-200" : "text-emerald-400 hover:text-emerald-200"
+                isAdmin ? "text-blue-400 hover:text-blue-200"
+                : isSsp ? "text-purple-400 hover:text-purple-200"
+                : "text-emerald-400 hover:text-emerald-200"
               }`}
             >
               <RefreshCw className="w-3 h-3" />
@@ -217,7 +243,7 @@ export default function LoginPage() {
       <Dialog open={resetOpen} onOpenChange={setResetOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Change {isAdmin ? "Admin" : "Smart Cell"} Password</DialogTitle>
+            <DialogTitle>Change {isAdmin ? "Admin" : isSsp ? "SSP Office" : "Smart Cell"} Password</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleResetPassword} className="space-y-4 pt-1">
             <div>
